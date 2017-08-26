@@ -20,9 +20,9 @@ function wsMsgHandler(pack) {  // this === ws
 // websocketserver handlers
 const wssErrHandler = err => console.error(`[wsserver error:\n${err}\n]`)
 const wssInitHandler = () => console.log(`[wsserver listening on port ${port}]`)
-function wssConHandler(ws, req) {  // httpreq 2nd argument
+function wssConHandler(ws, httpreq) {
   console.log('[new connection]')
-  ws.session = url.parse(req.url, true).query.session
+  ws.session = url.parse(httpreq.url, true).query.session
   ws.on('error', wsErrHandler)
   ws.on('close', wsCloseHandler)
   ws.on('message', wsMsgHandler)
