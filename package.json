@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "natural": "^0.5.4",
+    "node-flag": "^1.5.1",
     "pump": "^1.0.2",
     "stream-set": "^1.1.0",
     "ws": "^3.1.0"

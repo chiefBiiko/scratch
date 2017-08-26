@@ -1,15 +1,20 @@
+const AuthChannel = require('./auth-channel')
 const fs = require('fs')
 const http = require('http')
+const nodeFlags = require('node-flag')
 const path = require('path')
 const pump = require('pump')
 const url = require('url')
 
+const wantsCommander = nodeFlags.isset('commander')
 const host = process.argv[3] || '127.0.0.1'
 const port = /^\d+$/.test(process.argv[4]) ? Number(process.argv[4]) : 50000
 const httpserver = new http.Server()
-var stepper = 0  // session identification
+var commander  // almost ready to command
+if (wantsCommander)  commander = new AuthChannel.Commander(port - 1000)
 
 // helpers
+const makeFakeSecret = () => `${new Date().getTime()}${Math.random()}`
 function makeCookieExpiry(lifetime) {  // lifetime in minutes
   return new Date(new Date().getTime() + lifetime * 60000).toUTCString()
 }
@@ -29,10 +34,10 @@ function httpServerInitHandler() {
   console.log(`[httpserver listening on port ${port}]`)
 }
 function httpServerErrHandler(err) {
-  console.error(`[httpserver error:\n${err}\n]`)
+  console.error(`[httpserver error: ${err}]`)
 }
 function httpClientErrHandler(err, tcpsocket) {
-  console.error(`[httpclient error:\n${err}\n]`)
+  console.error(`[httpclient error: ${err}]`)
   tcpsocket.end('HTTP/1.1 400 Bad Request\r\n\r\n').destroy()
 }
 function httpReqHandler(req, res) {
@@ -43,12 +48,17 @@ function httpReqHandler(req, res) {
     return
   }
   if (!cookies.session) {
-    res.setHeader('Set-Cookie', `session=${++stepper}; ` +
-                  `expires=${makeCookieExpiry(10)}`)
+    const fakesecret = makeFakeSecret()
+    if (wantsCommander) {
+      commander.scheduleDelete(1, fakesecret)
+      commander.cmdAdd(fakesecret)
+    }
+    res.setHeader('Set-Cookie', `session=${fakesecret}; ` +
+                  `expires=${makeCookieExpiry(1)}`)
   }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
   pump(htmlStream, res, err => {
-    if (err) console.error(`[httpserver html pump error:\n${err}\n]`)
+    if (err) console.error(`[httpserver html pump error: ${err}]`)
   })
   console.log(`[http serving to: ${req.headers.host}]`)
 }

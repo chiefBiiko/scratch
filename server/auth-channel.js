@@ -3,7 +3,7 @@ const streamSet = require('stream-set')
 
 /*
    use like:
-   const commander = new Commander(9999)
+   const commander = new AuthChannel.Commander(9999)
    // ... broadcast a command:
    commander.cmdAdd('validId')  // or cmdDel('invalidId')
 */
@@ -13,36 +13,42 @@ class Commander extends net.Server {
     this.activeConsumers = streamSet()
     this.host = host
     this.port = port
+    this.validUsers = new Set()
     this.on('error', this.errorHandler)
     this.on('connection', this.connectionHandler)
     this.on('listening', this.listeningLogger)
     this.listen(port, host)
   }
   cmdAdd(value) {
+    this.validUsers.add(value)
     this.activeConsumers.forEach(consumer => {
       consumer.write(`add ${value}`)
     })
   }
-  cmdDel(value) {
+  cmdDelete(value) {
+    this.validUsers.delete(value)
     this.activeConsumers.forEach(consumer => {
       consumer.write(`delete ${value}`)
     })
   }
+  scheduleDelete(delay, value) {  // delay in minutes
+    setTimeout(this.cmdDelete.bind(this, value), delay * 60 * 1000)
+  }
   errorHandler(err) {
-    console.error(`[auth-channel error:\n${err}\n]`)
+    console.error(`[auth-channel error: ${err}]`)
   }
   connectionHandler(socket) {
     console.log(`[new auth-channel consumer: ${socket.remoteAddress}:?]`)
     this.activeConsumers.add(socket)
   }
   listeningLogger() {
-    console.log(`[auth-channnel commander listening on port ${this.port}]`)
+    console.log(`[auth-channnel commander serving on port ${this.port}]`)
   }
 }
 
 /*
    use like:
-   const consumer = new Consumer(9999)
+   const consumer = new AuthChannel.Consumer(9999)
    // consumer.validUsers is a Set
    // ...once done - free the socket
    consumer.destroy()
@@ -53,15 +59,19 @@ class Consumer extends net.Socket {
     this.setEncoding('utf8')
     this.commander = `${host}:${port}`
     this.validUsers = new Set()
-    this.on('data', this.dataHandler)
     this.on('error', this.errorHandler)
+    this.on('connect', this.connectLogger)
+    this.on('data', this.dataHandler)
     this.connect(port, host)
   }
   errorHandler(err) {
-    console.error(`[auth-channel error:\n${err}\n]`)
+    console.error(`[auth-channel error: ${err}]`)
+  }
+  connectLogger() {
+    console.log(`[auth-channel consuming from: ${this.commander}]`)
   }
   dataHandler(cmd) {
-    console.log(`[received new command: ${cmd}]`)
+    console.log(`[auth-channel incoming command: ${cmd}]`)
     if (cmd.startsWith('add')) {
       const value = cmd.replace(/^add/i, '').trim()
       this.validUsers.add(value)
