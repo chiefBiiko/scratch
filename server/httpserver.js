@@ -10,12 +10,12 @@ const httpserver = new http.Server()
 var stepper = 0  // session identification
 
 // helpers
-function cookieExpiry(lifetime) {  // lifetime in minutes
+function makeCookieExpiry(lifetime) {  // lifetime in minutes
   return new Date(new Date().getTime() + lifetime * 60000).toUTCString()
 }
 function parseCookies(cookies) {
   const list = {}
-  if (cookies) {
+  if (typeof(cookies) === 'string') {
     cookies.split(';').forEach(cookie => {
       const parts = cookie.split('=')
       list[parts.shift().trim()] = decodeURI(parts.join('='))
@@ -44,7 +44,7 @@ function httpReqHandler(req, res) {
   }
   if (!cookies.session) {
     res.setHeader('Set-Cookie', `session=${++stepper}; ` +
-                  `expires=${cookieExpiry(10)}`)
+                  `expires=${makeCookieExpiry(10)}`)
   }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
   pump(htmlStream, res, err => {

@@ -1,5 +1,4 @@
 const path = require('path')
-const url = require('url')
 const WebSocket = require('ws')
 
 const loadClassifier = require(path.join(__dirname, 'nlp', 'load-classifier'))
@@ -25,7 +24,6 @@ const wssErrHandler = err => console.error(`[wsserver error:\n${err}\n]`)
 const wssInitHandler = () => console.log(`[wsserver listening on port ${port}]`)
 function wssConHandler(ws, httpreq) {
   console.log('[new connection]')
-  ws.session = url.parse(httpreq.url, true).query.session
   ws.on('error', wsErrHandler)
   ws.on('close', wsCloseHandler)
   ws.on('message', wsMsgHandler)

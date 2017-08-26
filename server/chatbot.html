@@ -4,67 +4,57 @@
   <meta charset="utf-8">
   <title>chatbot client</title>
   <style>
-    body {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: 50vh;
-      grid-template-areas:
-      ". a a ."
-      ". a a .";
-    }
     #chatbot-component {
-      width: 250px;
-      border: 5px solid #ccc;
-      padding: 5px;
-      grid-area: a;
-      align-self: center;
-      justify-self: center;
+      background: #000;
+      color: #fff;
+      height: 150px;
+      width: 200px;
+      margin: 30vh auto auto auto;
     }
-    #msgboard {
-      width: 100%;
-      height: 100px;
-      background-color: #ccc;
+    #chatbot-component-msgboard {
+      display: block;
+      height: 130px;
+      width: inherit;
+      word-wrap: break-word;
       overflow-y: scroll;
     }
-    #userinput {
-      width: 100%;
+    #chatbot-component-userinput {
       box-sizing: border-box;
+      height: 20px;
+      width: 100%;
     }
   </style>
   <script>
     "use strict";
-    const parseCookies = cookies => {
-      const list = {}
-      if (cookies) {
-        cookies.split(';').forEach(cookie => {
-          const parts = cookie.split('=')
-          list[parts.shift().trim()] = decodeURI(parts.join('='))
-        })
+    function initView() {
+      const wsc = new WebSocket('ws://127.0.0.1:50001')
+      const msgboard = document.querySelector('#chatbot-component-msgboard')
+      const stdusr = document.querySelector('#chatbot-component-userinput')
+      function parseCookies(cookies) {
+        const list = {}
+        if (typeof(cookies) === 'string') {
+          cookies.split(';').forEach(cookie => {
+            const parts = cookie.split('=')
+            list[parts.shift().trim()] = decodeURI(parts.join('='))
+          })
+        }
+        return list
       }
-      return list
-    }
-    const initView = () => {
-      const session = parseCookies(window.document.cookie).session
-      const wsc = new WebSocket(`ws://127.0.0.1:50001?session=${session}`)
-      const msgboard = document.querySelector('#msgboard')
-      const userinput = document.querySelector('#userinput')
-      const userInputHandler = e => {
-        if (e.keyCode === 13 && !/^\s*$/.test(userinput.value)) {
-          msgboard.innerText += `usr>${userinput.value}\n`
-          wsc.send(JSON.stringify({
-            session: session,
-            message: userinput.value
-          }))
-          userinput.value = ''
+      function userInputHandler(e) {
+        if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
+          const session = parseCookies(window.document.cookie).session
+          msgboard.innerText += `usr>${stdusr.value}\n`
+          wsc.send(JSON.stringify({ session: session, message: stdusr.value }))
+          stdusr.value = ''
           msgboard.scrollTop = msgboard.scrollHeight
         }
       }
-      const botReplyHandler = e => {
+      function botReplyHandler(e) {
         const pack = JSON.parse(e.data)
         msgboard.innerText += `bot>${pack.message}\n`
         msgboard.scrollTop = msgboard.scrollHeight
       }
-      userinput.onkeyup = userInputHandler
+      stdusr.onkeyup = userInputHandler
       wsc.onmessage = botReplyHandler
     }
     window.onload = initView
@@ -72,10 +62,9 @@
 </head>
 <body>
   <div id="chatbot-component">
-    <h2>chatbot client</h2>
-    <p>basic implementation</p>
-    <div id="msgboard"></div>
-    <input type="text" placeholder="bot up?!" id="userinput" autofocus>
+    <code id="chatbot-component-msgboard"></code>
+    <input id="chatbot-component-userinput" type="text" placeholder="bot up?!"
+    autofocus>
   </div>
 </body>
 </html>
