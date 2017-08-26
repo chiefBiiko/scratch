@@ -1,6 +1,8 @@
 const fs = require('fs')
 const http = require('http')
+const path = require('path')
 const pump = require('pump')
+const url = require('url')
 
 const host = process.argv[3] || '127.0.0.1'
 const port = /^\d+$/.test(process.argv[4]) ? Number(process.argv[4]) : 50000
@@ -35,14 +37,18 @@ function httpClientErrHandler(err, tcpsocket) {
 }
 function httpReqHandler(req, res) {
   const cookies = parseCookies(req.headers.cookie)
-  const readStream = fs.createReadStream('./chatbot.html')
+  const htmlStream = fs.createReadStream(path.join(__dirname, 'chatbot.html'))
+  if (url.parse(req.url).pathname === '/favicon.ico') {
+    res.end()
+    return
+  }
   if (!cookies.session) {
     res.setHeader('Set-Cookie', `session=${++stepper}; ` +
                   `expires=${cookieExpiry(10)}`)
   }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-  pump(readStream, res, err => {
-    if (err) console.error(`[pump error:\n${err}\n]`)
+  pump(htmlStream, res, err => {
+    if (err) console.error(`[httpserver html pump error:\n${err}\n]`)
   })
   console.log(`[http serving to: ${req.headers.host}]`)
 }
