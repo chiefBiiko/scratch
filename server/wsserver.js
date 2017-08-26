@@ -1,10 +1,10 @@
 const url = require('url')
-const WebSocketServer = require('ws').Server
+const WebSocket = require('ws')
 const classifier = require('./nlp/load-classifier')('./nlp/classifier.json')
 
 const host = process.argv[3] || '127.0.0.1'
 const port = /^\d+$/.test(process.argv[4]) ? Number(process.argv[4]) : 50001
-const wsserver = new WebSocketServer({ host: host, port: port })
+const wsserver = new WebSocket.Server({ host: host, port: port })
 
 // websocketclient handlers
 const wsErrHandler = err => console.error(`[websocket error:\n${err}\n]`)
