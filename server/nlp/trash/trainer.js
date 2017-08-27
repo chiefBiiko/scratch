@@ -28,7 +28,7 @@ classifier.events.on('trainedWithDocument', obj => {
   if (obj.index + 1 === obj.total) {  // classifier been trained
     classifier.save(fpath, (err, classifier) => {
       if (err) return console.error(err)
-      console.log('trained naive bayes classifier saved to "classifier.json"')
+      console.log('trained classifier saved to "classifier.json"')
     })
   }
 })

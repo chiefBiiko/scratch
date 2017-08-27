@@ -21,15 +21,11 @@ class Commander extends net.Server {
   }
   cmdAdd(value) {
     this.validUsers.add(value)
-    this.activeConsumers.forEach(consumer => {
-      consumer.write(`add ${value}`)
-    })
+    this.activeConsumers.forEach(consumer => consumer.write(`add ${value}`))
   }
   cmdDelete(value) {
     this.validUsers.delete(value)
-    this.activeConsumers.forEach(consumer => {
-      consumer.write(`delete ${value}`)
-    })
+    this.activeConsumers.forEach(consumer => consumer.write(`delete ${value}`))
   }
   scheduleDelete(delay, value) {  // delay in minutes
     setTimeout(this.cmdDelete.bind(this, value), delay * 60 * 1000)
@@ -73,11 +69,9 @@ class Consumer extends net.Socket {
   dataHandler(cmd) {
     console.log(`[auth-channel incoming command: ${cmd}]`)
     if (cmd.startsWith('add')) {
-      const value = cmd.replace(/^add/i, '').trim()
-      this.validUsers.add(value)
+      this.validUsers.add(cmd.replace(/^add/i, '').trim())
     } else if (cmd.startsWith('delete')) {
-      const value = cmd.replace(/^delete/i, '').trim()
-      this.validUsers.delete(value)
+      this.validUsers.delete(cmd.replace(/^delete/i, '').trim())
     }
   }
 }

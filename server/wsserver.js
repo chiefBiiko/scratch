@@ -1,10 +1,11 @@
 const auth = require('./auth-channel')
+const ChatBot = require('./bot/chatbot')
 const nodeFlag = require('node-flag')
 const path = require('path')
 const WebSocket = require('ws')
 
-const loadClassifier = require(path.join(__dirname, 'nlp', 'load-classifier'))
-const bayes = loadClassifier(path.join(__dirname, 'nlp', 'classifier.json'))
+//const loadClassifier = require(path.join(__dirname, 'nlp', 'load-classifier'))
+//const bayes = loadClassifier(path.join(__dirname, 'nlp', 'classifier.json'))
 
 const host = process.argv[3] || '127.0.0.1'
 const port = /^\d+$/.test(process.argv[4]) ? Number(process.argv[4]) : 50001
@@ -21,7 +22,9 @@ function wsMsgHandler(pack) {  // this === ws
   if (consumer && !consumer.validUsers.has(sack.session)) {
     res = 'you are unauthorized'
   } else {
-    res = bayes.classify(sack.message)  // map incoming to response
+    res = this.chatbot.respond(sack.message)
+  //res = sack.message
+  //res = bayes.classify(sack.message)  // map incoming to response
   }
   console.log(`[session ${sack.session} incoming: ${sack.message}]`)
   console.log(`[session ${sack.session} response: ${res}]`)
@@ -31,8 +34,9 @@ function wsMsgHandler(pack) {  // this === ws
 // websocketserver handlers
 const wssErrHandler = err => console.error(`[wsserver error: ${err}]`)
 const wssInitHandler = () => console.log(`[wsserver listening on port ${port}]`)
-function wssConHandler(ws) {  // httpreq optional 2nd argument
+function wssConHandler(ws/*, httpreq*/) {
   console.log('[new connection]')
+  ws.chatbot = new ChatBot()
   ws.on('error', wsErrHandler)
   ws.on('close', wsCloseHandler)
   ws.on('message', wsMsgHandler)

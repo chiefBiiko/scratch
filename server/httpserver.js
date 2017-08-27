@@ -41,7 +41,7 @@ function httpClientErrHandler(err, tcpsocket) {
 }
 function httpReqHandler(req, res) {
   const cookies = parseCookies(req.headers.cookie)
-  const htmlStream = fs.createReadStream(path.join(__dirname, 'chatbot.html'))
+  const htmlStream = fs.createReadStream(path.join(__dirname, 'chatview.html'))
   if (url.parse(req.url).pathname === '/favicon.ico') {
     res.end()
     return
