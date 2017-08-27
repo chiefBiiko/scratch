@@ -1,20 +1,19 @@
-const AuthChannel = require('./auth-channel')
+const auth = require('./auth-channel')
 const fs = require('fs')
 const http = require('http')
-const nodeFlags = require('node-flag')
+const nodeFlag = require('node-flag')
 const path = require('path')
 const pump = require('pump')
 const url = require('url')
 
-const wantsCommander = nodeFlags.isset('commander')
 const host = process.argv[3] || '127.0.0.1'
 const port = /^\d+$/.test(process.argv[4]) ? Number(process.argv[4]) : 50000
 const httpserver = new http.Server()
 var commander  // almost ready to command
-if (wantsCommander)  commander = new AuthChannel.Commander(port - 1000)
+if (nodeFlag.isset('commander')) commander = new auth.Commander(port - 1000)
 
 // helpers
-const makeFakeSecret = () => `${new Date().getTime()}${Math.random()}`
+const makeFakeSecret = () => Math.random().toString()
 function makeCookieExpiry(lifetime) {  // lifetime in minutes
   return new Date(new Date().getTime() + lifetime * 60000).toUTCString()
 }
@@ -49,7 +48,7 @@ function httpReqHandler(req, res) {
   }
   if (!cookies.session) {
     const fakesecret = makeFakeSecret()
-    if (wantsCommander) {
+    if (commander) {
       commander.scheduleDelete(1, fakesecret)
       commander.cmdAdd(fakesecret)
     }
