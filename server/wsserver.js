@@ -4,9 +4,6 @@ const nodeFlag = require('node-flag')
 const path = require('path')
 const WebSocket = require('ws')
 
-//const loadClassifier = require(path.join(__dirname, 'nlp', 'load-classifier'))
-//const bayes = loadClassifier(path.join(__dirname, 'nlp', 'classifier.json'))
-
 const host = process.argv[3] || '127.0.0.1'
 const port = /^\d+$/.test(process.argv[4]) ? Number(process.argv[4]) : 50001
 const wsserver = new WebSocket.Server({ host: host, port: port })
@@ -23,8 +20,6 @@ function wsMsgHandler(pack) {  // this === ws
     res = 'you are unauthorized'
   } else {
     res = this.chatbot.respond(sack.message)
-  //res = sack.message
-  //res = bayes.classify(sack.message)  // map incoming to response
   }
   console.log(`[session ${sack.session} incoming: ${sack.message}]`)
   console.log(`[session ${sack.session} response: ${res}]`)

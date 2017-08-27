@@ -9,3 +9,5 @@ class ChatBot {
     return this.appmap.approx(incoming) || 'sorry i didnt get that'
   }
 }
+
+module.exports = ChatBot

@@ -9,7 +9,7 @@ const url = require('url')
 const host = process.argv[3] || '127.0.0.1'
 const port = /^\d+$/.test(process.argv[4]) ? Number(process.argv[4]) : 50000
 const httpserver = new http.Server()
-var commander  // almost ready to command
+var commander
 if (nodeFlag.isset('commander')) commander = new auth.Commander(port - 1000)
 
 // helpers

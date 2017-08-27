@@ -1,4 +1,5 @@
 const natural = require('natural')
+
 /*
   map data structure for approximate string mapping
   maps a search key to a value if any of its key arrays contains a string with
@@ -15,14 +16,15 @@ const natural = require('natural')
    console.log(appmap.approx('hallo bot', .9))  // => 'hi buddy'
 */
 class ApproxMap extends Map {
-  constructor(initDocs, threshold=.7) {
+  constructor(initDocs, cutoff = .7) {
     super()
     if (Array.isArray(initDocs)) {
       initDocs.forEach(doc => this.set(doc[0], doc[1]))
     }
-    this.threshold = threshold
+    this.cutoff = typeof(cutoff) === 'number' && cutoff > 0 && cutoff <= 1 ?
+      cutoff : .7
   }
-  approx(key, threshold=this.threshold) {
+  approx(key, cutoff=this.cutoff) {
     var ram, maxscore
     if (!this._isString(key)) {
       throw new Error('arg types: .approx(key: string, threshold: number)')
@@ -35,7 +37,7 @@ class ApproxMap extends Map {
       ram.set(inrmax, value)
     })
     maxscore = Math.max(...Array.from(ram.keys()))
-    return maxscore >= threshold ? ram.get(maxscore) : undefined
+    return maxscore >= cutoff ? ram.get(maxscore) : undefined
   }
   get(key) {
     const keys = Array.from(this.keys())
@@ -65,8 +67,3 @@ class ApproxMap extends Map {
 }
 
 module.exports = ApproxMap
-
-var appmap = new ApproxMap()
-appmap.set(['hello', 'mello'], 'greeting').set(['poop'], 'noop')
-console.log(appmap.get(['hello', 'mello']))
-console.log(appmap.approx('hoop'))
