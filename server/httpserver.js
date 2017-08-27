@@ -49,11 +49,11 @@ function httpReqHandler(req, res) {
   if (!cookies.session) {
     const fakesecret = makeFakeSecret()
     if (commander) {
-      commander.scheduleDelete(1, fakesecret)
+      commander.scheduleDelete(5, fakesecret)
       commander.cmdAdd(fakesecret)
     }
     res.setHeader('Set-Cookie', `session=${fakesecret}; ` +
-                  `expires=${makeCookieExpiry(1)}`)
+                  `expires=${makeCookieExpiry(5)}`)
   }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
   pump(htmlStream, res, err => {
