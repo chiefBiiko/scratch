@@ -22,7 +22,6 @@ function wsMsgHandler(pack) {  // this === ws
     res = 'you are unauthorized'
   } else {
     res = bayes.classify(sack.message)  // map incoming to response
-    if (!this.session) this.session = sack.session
   }
   console.log(`[session ${sack.session} incoming: ${sack.message}]`)
   console.log(`[session ${sack.session} response: ${res}]`)
