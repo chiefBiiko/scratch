@@ -5,6 +5,7 @@ const natural = require('natural')
   maps a search key to a value if any of its key arrays contains a string with
   a Jaro-Winkler similarity >= threshold
   the highest score always dominates
+  ignores case
   a key must be a string[], a value must be a string
   main method:
    ApproxMap.prototype.approx(key: string, threshold: number)
