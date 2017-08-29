@@ -28,6 +28,7 @@
     "use strict"
     function initView() {
       const wsc = new WebSocket('ws://127.0.0.1:50001')
+      const component = document.querySelector('#chatbot-component')
       const msgboard = document.querySelector('#chatbot-component-msgboard')
       const stdusr = document.querySelector('#chatbot-component-userinput')
       function parseCookies(cookies) {
@@ -54,6 +55,7 @@
         msgboard.innerText += `bot>${pack.message}\n`
         msgboard.scrollTop = msgboard.scrollHeight
       }
+      component.onclick = () => stdusr.focus()
       stdusr.onkeyup = userInputHandler
       wsc.onmessage = botReplyHandler
     }
