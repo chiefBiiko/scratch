@@ -1,5 +1,4 @@
 const natural = require('natural')
-
 /*
   map data structure for approximate string mapping
   maps a search key to a value if any of its key arrays contains a string with
@@ -21,7 +20,7 @@ const natural = require('natural')
    console.log(appmap.delete(jsonkeyarr))  // this
    console.log(appmap.has(jsonkeyarr))     // false
 */
-class ApproxMap extends Map {
+module.exports = class ApproxMap extends Map {
   constructor(initDocs, cutoff = .75) {
     super()
     this._initializeDocuments(initDocs)
@@ -94,5 +93,3 @@ class ApproxMap extends Map {
     return typeof(x) === 'string' || x instanceof String
   }
 }
-
-module.exports = ApproxMap

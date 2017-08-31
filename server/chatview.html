@@ -26,24 +26,14 @@
   </style>
   <script>
     "use strict"
-    function initView() {
-      const wsc = new WebSocket('ws://127.0.0.1:50001')
+    function initChatBotComponent() {
+      const wsc = new WebSocket('ws://127.0.0.1:50001')  // server address
+      const session = Math.random().toString()  // fake user id
       const component = document.querySelector('#chatbot-component')
       const msgboard = document.querySelector('#chatbot-component-msgboard')
       const stdusr = document.querySelector('#chatbot-component-userinput')
-      function parseCookies(cookies) {
-        const list = {}
-        if (typeof(cookies) === 'string') {
-          cookies.split(';').forEach(cookie => {
-            const parts = cookie.split('=')
-            list[parts.shift().trim()] = decodeURI(parts.join('='))
-          })
-        }
-        return list
-      }
       function userInputHandler(e) {
         if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
-          const session = parseCookies(window.document.cookie).session
           msgboard.innerText += `usr>${stdusr.value}\n`
           wsc.send(JSON.stringify({ session: session, message: stdusr.value }))
           stdusr.value = ''
@@ -59,7 +49,7 @@
       stdusr.onkeyup = userInputHandler
       wsc.onmessage = botReplyHandler
     }
-    window.onload = initView
+    window.onload = initChatBotComponent
   </script>
 </head>
 <body>

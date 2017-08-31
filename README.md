@@ -5,15 +5,8 @@
 ## Overview
 
 + `server`
-    + `httpserver.js`
-        + serving the host website including the chatview
-        + authority for session management
     + `wsserver.js`
         + providing a chatbot for each chatview
-    + `auth-channel.js`
-        + exports: `{ class Commander, class Consumer }`
-        + purpose: `httpserver: Commander -> wsserver: Consumer`
-        + for forwarding user authorization
     + `chatview.html`
         + minimal chatview condensed in one file
     + `bot`
@@ -27,20 +20,6 @@
             + exports: `class ChatBot`
             + responsible for user interaction
             + a chatbot is always bound to one particular websocket
-
-## Training a chatbot
-
-Define mappings in `boot-brain.js`. That is it.
-
-## Demo
-
-Just start both servers from a terminal:
-
-`node httpserver --commander`
-
-`node wsserver --consumer`
-
-And hit `localhost:50000` with a browser.
 
 ## Outlook
 
