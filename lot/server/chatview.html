@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>chatbot client</title>
+  <style>
+    #chatbot-component {
+      background: #000;
+      color: #fff;
+      height: 150px;
+      width: 200px;
+      margin: 30vh auto auto auto;
+    }
+    #chatbot-component-msgboard {
+      display: block;
+      height: 130px;
+      width: inherit;
+      word-wrap: break-word;
+      overflow-y: scroll;
+    }
+    #chatbot-component-userinput {
+      box-sizing: border-box;
+      height: 20px;
+      width: 100%;
+    }
+  </style>
+  <script>
+    "use strict"
+    function initChatBotComponent() {
+      const wsc = new WebSocket('ws://127.0.0.1:50000')  // server address
+      const component = document.querySelector('#chatbot-component')
+      const msgboard = document.querySelector('#chatbot-component-msgboard')
+      const stdusr = document.querySelector('#chatbot-component-userinput')
+      function userInputHandler(e) {
+        if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
+          msgboard.innerText += `usr>${stdusr.value}\n`
+          wsc.send(JSON.stringify({ text: stdusr.value }))
+          stdusr.value = ''
+          msgboard.scrollTop = msgboard.scrollHeight
+        }
+      }
+      function botReplyHandler(e) {
+        const pack = JSON.parse(e.data)
+        msgboard.innerText += `bot>${pack.text}\n`
+        msgboard.scrollTop = msgboard.scrollHeight
+      }
+      component.onclick = () => stdusr.focus()
+      stdusr.onkeyup = userInputHandler
+      wsc.onmessage = botReplyHandler
+    }
+    window.onload = initChatBotComponent
+  </script>
+</head>
+<body>
+  <div id="chatbot-component">
+    <code id="chatbot-component-msgboard"></code>
+    <input id="chatbot-component-userinput" type="text" placeholder="bot up?!"
+    autofocus>
+  </div>
+</body>
+</html>
