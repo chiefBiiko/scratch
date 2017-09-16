@@ -22,7 +22,7 @@ module.exports = (jsonfile=FAKE_DB, minutes=2) => {
     })
   }, 1000 * 60 * minutes)
   // assemble factory return
-  const checkAgainstDB = (e, next) => { // closes over DB
+  const _checkAgainstDB = (e, next) => { // closes over DB
     // DB subsets
     const productnames = Object.keys(DB)
     const categorynames = [ ...new Set(productnames.map(pname => {
@@ -51,5 +51,5 @@ module.exports = (jsonfile=FAKE_DB, minutes=2) => {
     return e // 4 dev tests only, ignored by botpress
   }
   // returning a closure
-  return checkAgainstDB
+  return _checkAgainstDB
 }

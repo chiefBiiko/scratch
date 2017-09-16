@@ -3,6 +3,8 @@
 const chai = require('chai')
 const should = chai.should()
 
+const path = require('path')
+
 const randomArrPick = require('./../helpers/randomArrPick')
 const fmtContent = require('./../helpers/fmtContent.js')
 const andFmtArr = require('./../helpers/andFmtArr')
@@ -11,15 +13,16 @@ const checkForUserName = require('./../helpers/checkForUserName')
 const replaceOrFalsy = require('./../helpers/replaceOrFalsy')
 const matchExAx = require('./../helpers/matchExAx')
 const makeActiveMap = require('./../helpers/makeActiveMap')
+const makeCCDB = require('./../helpers/makeCCDB')
 
 const makeCheckYes = require('./../chain/makeCheckYes')
 const makeManageSessions = require('./../chain/makeManageSessions')
 const tokenizeText = require('./../chain/tokenizeText')
 const makeRageScorer = require('./../chain/makeRageScorer')
-const makeCheckAgainstDB = require('./../chain/makeCheckAgainstDB')
-const flag = require('./../chain/flag')
-const patchProductInfo = require('./../chain/patchProductInfo')
-const makeChooseResponse = require('./../chain/makeChooseResponse')
+const _makeCheckAgainstDB = require('./../chain/_makeCheckAgainstDB')
+const _flag = require('./../chain/_flag')
+const _patchProductInfo = require('./../chain/_patchProductInfo')
+const _makeChooseResponse = require('./../chain/_makeChooseResponse')
 
 describe('helpers', () => {
   describe('randomArrPick', () => {
@@ -103,6 +106,12 @@ describe('helpers', () => {
       }, 1000 * 61)       // exec timeout
     }).timeout(1000 * 63) // test timeout
   })
+  describe('makeCCDB', () => {
+    it('should return an object', () => {
+      makeCCDB(path.join(__dirname, '..', 'data', 'dev', 'cc.json'))
+        .should.be.an('object')
+    })
+  })
 })
 
 describe('chain', () => {
@@ -153,14 +162,14 @@ describe('chain', () => {
       rageScorer.should.be.a('function')
     })
   })
-  describe('makeCheckAgainstDB', () => {
-    const checkAgainstDB = makeCheckAgainstDB('../data/dev/products.json', 10)
-    const e = checkAgainstDB({
+  describe('_makeCheckAgainstDB', () => {
+    const _checkAgainstDB = _makeCheckAgainstDB('../data/dev/products.json', 10)
+    const e = _checkAgainstDB({
       text: 'price of the iphone 7',
       tokens: [ 'price', 'of', 'the', 'iphone', '7' ]
     }, () => {})
     it('should return a function', () => {
-      checkAgainstDB.should.be.a('function')
+      _checkAgainstDB.should.be.a('function')
     })
     it('should factor a function that sets a object under e.stash', () => {
       e.stash.should.be.an('object')
@@ -171,8 +180,8 @@ describe('chain', () => {
                                    'hitProducts')
     })
   })
-  describe('flag', () => {
-    const e = flag({
+  describe('_flag', () => {
+    const e = _flag({
       text: 'tell me the price of the iphone 7',
       stash: {
         exactProducts: [ 'iphone 7' ],
@@ -190,13 +199,13 @@ describe('chain', () => {
     () => {})
     it('should set boolean flags as e.stash.hitProducts.*.flags.wants*', () => {
       e.stash.hitProducts['iphone 7'].flags.should.be.an('object')
-      Object.keys(e.stash.hitProducts['iphone 7'].flags).forEach(flag => {
-        e.stash.hitProducts['iphone 7'].flags[flag].should.be.a('boolean')
+      Object.keys(e.stash.hitProducts['iphone 7'].flags).forEach(_flag => {
+        e.stash.hitProducts['iphone 7'].flags[_flag].should.be.a('boolean')
       })
     })
   })
-  describe('patchProductInfo', () => {
-    const e = patchProductInfo({
+  describe('_patchProductInfo', () => {
+    const e = _patchProductInfo({
       text: 'tell me the price of the iphone 7',
       stash: {
         exactProducts: [ 'iphone 7' ],
@@ -225,11 +234,11 @@ describe('chain', () => {
       e.stash.hitProducts['iphone 7'].patch.should.be.a('string')
     })
   })
-  describe('makeChooseResponse', () => {
+  describe('_makeChooseResponse', () => {
     const SESSIONS = makeActiveMap(1) // dependency
-    const chooseResponse = makeChooseResponse(SESSIONS)
+    const _chooseResponse = _makeChooseResponse(SESSIONS)
     it('should return a function', () => {
-      chooseResponse.should.be.a('function')
+      _chooseResponse.should.be.a('function')
     })
     it('should set session.onyes if there is an approx match', () => {
       SESSIONS.set('xyz', {
@@ -237,7 +246,7 @@ describe('chain', () => {
         last_stamp: 1504786753609, // .last_stamp must be a timestamp
         onyes: ''
       })
-      chooseResponse({
+      _chooseResponse({
         text: 'features galaxy',
         user: { id: 'xyz' },
         stash: {

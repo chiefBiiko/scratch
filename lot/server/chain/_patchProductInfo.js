@@ -6,9 +6,9 @@ module.exports = (e, next) => {
   Object.keys(e.stash.hitProducts).forEach(pname => {
     const patches = // assemble an array of statements for each product
       Object.keys(e.stash.hitProducts[pname].flags)
-        .filter(flag => e.stash.hitProducts[pname].flags[flag]) // flag: bool
-        .map(flag => {
-          switch(flag) {
+        .filter(_flag => e.stash.hitProducts[pname].flags[_flag]) // _flag: bool
+        .map(_flag => {
+          switch(_flag) {
             case 'features':
               return `has ${['these', 'cool'][Math.round(Math.random())]} ` +
                 `features - ${andFmtArr(e.stash.hitProducts[pname].features)}`

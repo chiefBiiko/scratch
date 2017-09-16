@@ -10,25 +10,33 @@ const wsserver = new WebSocket.Server({ host: host, port: port })
 
 const SESSIONS = require('./helpers/makeActiveMap')(10)
 
+// helpers
+const makeCCDB = require('./helpers/makeCCDB')
+
+// chain
 const makeManageSessions = require('./chain/makeManageSessions')
 const makeCheckYes = require('./chain/makeCheckYes')
 const makeRageScorer = require('./chain/makeRageScorer')
 const tokenizeText = require('./chain/tokenizeText')
-const makeCheckAgainstDB = require('./chain/makeCheckAgainstDB')
-const flag = require('./chain/flag')
-const patchProductInfo = require('./chain/patchProductInfo')
-const makeChooseResponse = require('./chain/makeChooseResponse')
+//const _makeCheckAgainstDB = require('./chain/_makeCheckAgainstDB')
+const makeCheckAgainstCCDB = require('./chain/makeCheckAgainstCCDB')
+const _flag = require('./chain/_flag')
+//const _patchProductInfo = require('./chain/_patchProductInfo')
+const _makeChooseResponse = require('./chain/_makeChooseResponse')
 const devlog = require('./chain/devlog')
 
-// require all chains here but factor each of them inside the wsMsgHandler
+// global, auto-updated DB
+var CC_DB = makeCCDB(path.join(__dirname, 'data', 'dev', 'cc.json'))
 
 // websocketclient handlers
 const wsErrHandler = err => console.error(`[websocket error: ${err}]`)
-const wsCloseHandler = (/*code, reason*/) => console.log('[closed connection]')
+function wsCloseHandler() { // this === ws
+  console.log(`[closed connection: ${this.id}]`)
+}
 function wsMsgHandler(e) {  // this === ws
   const pack = JSON.parse(e)
   pack.user = { id: this.id }
-  console.log(pack)
+  pack.response = ''
   // waterfall thru
   waterfall([
     next => next(null, pack),
@@ -36,10 +44,10 @@ function wsMsgHandler(e) {  // this === ws
     makeCheckYes(SESSIONS),
     makeRageScorer(SESSIONS),
     tokenizeText,
-    makeCheckAgainstDB(),
-    flag,
-    patchProductInfo,
-    makeChooseResponse(SESSIONS),
+  //_makeCheckAgainstDB(),
+    _flag,
+  //_patchProductInfo,
+    _makeChooseResponse(SESSIONS),
     devlog
   ], (err, e) => {
     if (err) return console.error(err)

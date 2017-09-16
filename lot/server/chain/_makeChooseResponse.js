@@ -4,7 +4,7 @@
 const fmtContent = require('./../helpers/fmtContent')
 
 module.exports = SESSIONS => {
-   const chooseResponse = (e, next) => {
+   const _chooseResponse = (e, next) => {
      const session = SESSIONS.get(e.user.id)
      if (Object.keys(e.stash.hitProducts).length &&
          !Object.keys(e.stash.approxProducts).length) {
@@ -50,5 +50,5 @@ module.exports = SESSIONS => {
      return e // 4 dev tests only, ignored by botpress
    }
    // returning a closure
-   return chooseResponse
+   return _chooseResponse
 }
