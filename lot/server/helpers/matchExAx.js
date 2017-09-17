@@ -3,17 +3,13 @@
 const { LevenshteinDistance } = require('natural')
 
 module.exports = (text, tokens, targetarray, cutoff) => { // Levenshtein cutoff
-  const exact = targetarray.filter(tname => RegExp(tname, 'i').test(text))
-  var approx = {}
-  if (!exact.length) {
-    approx = targetarray.reduce((acc, tname) => { // arr 2 obj
-      const approxd = tokens.filter(token => {
-        return LevenshteinDistance(token.toLowerCase(), tname.toLowerCase()) <=
-          cutoff
-      })[0]
-      if (approxd) acc[approxd] = tname
-      return acc
-    }, {})
+  var matches = targetarray.filter(tn => RegExp(tn, 'i').test(text)) // exact
+  if (!matches.length) {                                             // approx
+    matches.concat(targetarray.filter(tn => {
+      return tokens.some(tk => {
+        return LevenshteinDistance(tk.toLowerCase(), tn.toLowerCase()) <= cutoff
+      })
+    }))
   }
-  return { exact: exact, approx: approx }
+  return matches
 }

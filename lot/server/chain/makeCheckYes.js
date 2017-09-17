@@ -2,10 +2,11 @@
 
 module.exports = SESSIONS => {
   const checkYes = (e, next) => {
+  //if (e.response) next(null, e)
     const session = SESSIONS.get(e.user.id)
-    // REFACTOR TO SEND RESPONSE IMMEDIATELY
     if (session.onyes && /^\s*(yes|yea|ya|y)\s*$/i.test(e.text)) {
-      session.ws.send(JSON.stringify({ text: session.onyes }))
+      e.response = session.onyes
+    //session.ws.send(JSON.stringify({ text: session.onyes }))
     }
     session.onyes = ''
     SESSIONS.set(e.user.id, session)

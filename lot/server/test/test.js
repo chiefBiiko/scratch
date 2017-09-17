@@ -18,7 +18,7 @@ const makeCCDB = require('./../helpers/makeCCDB')
 const makeCheckYes = require('./../chain/makeCheckYes')
 const makeManageSessions = require('./../chain/makeManageSessions')
 const tokenizeText = require('./../chain/tokenizeText')
-const makeRageScorer = require('./../chain/makeRageScorer')
+const rageScorer = require('./../chain/rageScorer')
 const _makeCheckAgainstDB = require('./../chain/_makeCheckAgainstDB')
 const _flag = require('./../chain/_flag')
 const _patchProductInfo = require('./../chain/_patchProductInfo')
@@ -85,15 +85,8 @@ describe('helpers', () => {
     const x = matchExAx('buy me an ipad pro',
                         ['buy', 'me', 'an', 'ipad', 'pro'],
                         ['iphone 7', 'ipad pro'])
-    it('should return an object with .exact and .approx', () => {
-      x.should.be.an('object')
-      x.should.have.all.keys('exact', 'approx')
-    })
-    it('should return an object that has an array on .exact', () => {
-      x.exact.should.be.an('array')
-    })
-    it('should return an object that has an object on .approx', () => {
-      x.approx.should.be.an('object')
+    it('should return an array', () => {
+      x.should.be.an('array')
     })
   })
   describe('makeActiveMap', () => {
@@ -155,9 +148,7 @@ describe('chain', () => {
       e.tokens.should.be.an('array')
     })
   })
-  describe('makeRageScorer', () => {
-    const SESSIONS = makeActiveMap(1) // dependency
-    const rageScorer = makeRageScorer(SESSIONS)
+  describe('rageScorer', () => {
     it('should return a function', () => {
       rageScorer.should.be.a('function')
     })
