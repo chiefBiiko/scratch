@@ -5,6 +5,7 @@ const should = chai.should()
 
 const path = require('path')
 
+const parsePort = require('./../helpers/parsePort')
 const randomArrPick = require('./../helpers/randomArrPick')
 const fmtContent = require('./../helpers/fmtContent.js')
 const andFmtArr = require('./../helpers/andFmtArr')
@@ -15,16 +16,24 @@ const matchExAx = require('./../helpers/matchExAx')
 const makeActiveMap = require('./../helpers/makeActiveMap')
 const makeCCDB = require('./../helpers/makeCCDB')
 
-const makeCheckYes = require('./../chain/makeCheckYes')
 const makeManageSessions = require('./../chain/makeManageSessions')
-const tokenizeText = require('./../chain/tokenizeText')
+const makeCheckYes = require('./../chain/makeCheckYes')
 const rageScorer = require('./../chain/rageScorer')
-const _makeCheckAgainstDB = require('./../chain/_makeCheckAgainstDB')
+const tokenizeText = require('./../chain/tokenizeText')
+const makeCheckAgainstCCDB = require('./../chain/makeCheckAgainstCCDB')
 const _flag = require('./../chain/_flag')
 const _patchProductInfo = require('./../chain/_patchProductInfo')
-const _makeChooseResponse = require('./../chain/_makeChooseResponse')
+const makeChooseResponse = require('./../chain/makeChooseResponse')
 
 describe('helpers', () => {
+  describe('parsePort', () => {
+    it('should parse a string sequence of digits to a number', () => {
+      parsePort('12345').should.equal(12345)
+    })
+    it('should return null if the string contains anything but digits', () => {
+      should.equal(parsePort('123noise'), null)
+    })
+  })
   describe('randomArrPick', () => {
     it('should quasi-randomly pick an item from an array', () => {
       const arr = ['a', 'b', 'c']
@@ -101,17 +110,20 @@ describe('helpers', () => {
   })
   describe('makeCCDB', () => {
     it('should return an object', () => {
-      makeCCDB(path.join(__dirname, '..', 'data', 'dev', 'cc.json'))
+      makeCCDB(path.join(__dirname, '..', 'data', 'ISO_3166-1_alpha-3.json'), 1)
         .should.be.an('object')
+    })
+    it('should return an object with .nameToCode and .codeToName', () => {
+      makeCCDB(path.join(__dirname, '..', 'data', 'ISO_3166-1_alpha-3.json'), 1)
+        .should.have.all.keys('nameToCode', 'codeToName')
     })
   })
 })
 
 describe('chain', () => {
   describe('makeManageSessions', () => {
-    const ws = { send: () => {} } // dependency
     const SESSIONS = makeActiveMap(1) // dependency
-    const manageSessions = makeManageSessions(ws, SESSIONS)
+    const manageSessions = makeManageSessions(SESSIONS)
     it('should return a function', () => {
       manageSessions.should.be.a('function')
     })
@@ -119,7 +131,7 @@ describe('chain', () => {
       manageSessions({ text: 'Hi Ho', user: { id: 'xyz' } }, () => {})
       const session = SESSIONS.get('xyz')
       session.should.be.an('object')
-      session.should.have.all.keys('ws', 'name', 'last_query',
+      session.should.have.all.keys(/* 'ws', */'name', 'last_query',
                                    'last_stamp', 'onyes')
     })
   })
@@ -153,22 +165,27 @@ describe('chain', () => {
       rageScorer.should.be.a('function')
     })
   })
-  describe('_makeCheckAgainstDB', () => {
-    const _checkAgainstDB = _makeCheckAgainstDB('../data/dev/products.json', 10)
-    const e = _checkAgainstDB({
-      text: 'price of the iphone 7',
-      tokens: [ 'price', 'of', 'the', 'iphone', '7' ]
+  describe('makeCheckAgainstCCDB', () => {
+    const checkAgainstCCDB = makeCheckAgainstCCDB({
+      nameToCode: { Germany: 'DEU' },
+      codeToName: {}
+    })
+    const e = checkAgainstCCDB({
+      text: 'country code Germany',
+      tokens: [ 'country', 'code', 'Germany' ]
     }, () => {})
     it('should return a function', () => {
-      _checkAgainstDB.should.be.a('function')
+      checkAgainstCCDB.should.be.a('function')
     })
     it('should factor a function that sets a object under e.stash', () => {
       e.stash.should.be.an('object')
     })
-    it('should set a set of data properties on e.stash', () => {
-      e.stash.should.have.all.keys('exactProducts', 'approxProducts',
-                                   'exactCategories', 'approxCategories',
-                                   'hitProducts')
+    it('should set .nameToCode and .codeToName on e.stash', () => {
+      e.stash.should.have.all.keys('nameToCode', 'codeToName')
+    })
+    it('should put objects on e.stash.*To*', () => {
+      e.stash.nameToCode.should.be.an('object')
+      e.stash.codeToName.should.be.an('object')
     })
   })
   describe('_flag', () => {
@@ -177,12 +194,12 @@ describe('chain', () => {
       stash: {
         exactProducts: [ 'iphone 7' ],
         hitProducts: {
-          'iphone 7' : {
+          'iphone 7': {
             category: 'smartphones',
             features: [ 'hd-camera', 'siri' ],
             pictures: [ 'iphront.png', 'iphback.png' ],
             price: 900,
-            ratings: [ 4, 3, 5, 4, 3, 4, 3, 4, 1, 3 ],
+            ratings: [ 4, 3, 5, 4, 3, 4, 3, 4, 1, 3 ]
           }
         }
       }
@@ -201,20 +218,20 @@ describe('chain', () => {
       stash: {
         exactProducts: [ 'iphone 7' ],
         hitProducts: {
-          'iphone 7' : {
+          'iphone 7': {
             category: 'smartphones',
             features: [ 'hd-camera', 'siri' ],
             pictures: [ 'iphront.png', 'iphback.png' ],
             price: 900,
             ratings: [ 4, 3, 5, 4, 3, 4, 3, 4, 1, 3 ],
             flags: {
-               features: false,
-               pictures: false,
-               price: true,
-               ratings: false,
-               wantsMinRating: false,
-               wantsMaxRating: false,
-               wantsAvgRating: false
+              features: false,
+              pictures: false,
+              price: true,
+              ratings: false,
+              wantsMinRating: false,
+              wantsMaxRating: false,
+              wantsAvgRating: false
             }
           }
         }
@@ -225,42 +242,18 @@ describe('chain', () => {
       e.stash.hitProducts['iphone 7'].patch.should.be.a('string')
     })
   })
-  describe('_makeChooseResponse', () => {
+  describe('makeChooseResponse', () => {
     const SESSIONS = makeActiveMap(1) // dependency
-    const _chooseResponse = _makeChooseResponse(SESSIONS)
+    const chooseResponse = makeChooseResponse(SESSIONS)
     it('should return a function', () => {
-      _chooseResponse.should.be.a('function')
+      chooseResponse.should.be.a('function')
     })
-    it('should set session.onyes if there is an approx match', () => {
-      SESSIONS.set('xyz', {
-        ws: { send: a => {} }, // must be implemented
-        last_stamp: 1504786753609, // .last_stamp must be a timestamp
-        onyes: ''
-      })
-      _chooseResponse({
-        text: 'features galaxy',
+    it('should return a function that sets a response on e', () => {
+      chooseResponse({
         user: { id: 'xyz' },
-        stash: {
-          exactProducts: [],
-          approxProducts: { galaxy: 'Galaxy S9' },
-          exactCategories: [],
-          approxCategories: {},
-          hitProducts: {
-            'Galaxy S9': {
-              category: 'smartphones',
-              manufacturer: 'Samsung',
-              features: [ 'durable', 'sustainable' ],
-              pictures: [ 'front.png', 'back.png' ],
-              price: 500,
-              ratings: [ 2, 3, 5, 4, 2, 4, 3, 4, 1, 5 ],
-              patch: 'The Galaxy S9 has cool features - alarm, and flashlight'
-            }
-          },
-        }
-      }, () => {})
-      SESSIONS.get('xyz').onyes
-        .endsWith('The Galaxy S9 has cool features - alarm, and flashlight')
-        .should.be.true
+        stash: { nameToCode: {}, codeToName: {} },
+        response: ''
+      }, () => {}).response.should.not.be.empty
     })
   })
 })

@@ -34,5 +34,5 @@ module.exports = (e, next) => {
     }
   })
   next(null, e)
-  return e // 4 dev tests only, ignored by botpress
+  return e // 4 dev tests only
 }

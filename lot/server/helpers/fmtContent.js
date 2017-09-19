@@ -13,6 +13,12 @@ module.exports = {
   nice2Meet: name => {
     return `Nice to meet you ${name || ''}`
   },
+  nameToCode: (name, code) => {
+    return `${name} has code ${code}`
+  },
+  codeToName: (code, name) => {
+    return `${code} stands for ${name}`
+  },
   hitProduct: patch => {
     return `${randomArrPick(['Bingo!', 'Here you go.', 'Ok.'])} ${patch}`
   },
@@ -21,14 +27,14 @@ module.exports = {
   },
   assertProduct: product => {
     return `${randomArrPick(['Are you talking about the',
-                             'Looking for the'])} ${product}?`
+      'Looking for the'])} ${product}?`
   },
   assertCategory: category => {
     return `Do you mean ${category}?`
   },
   fallback: () => {
     return randomArrPick(['Sorry, I did not understand that',
-                          'Hm, not sure what you mean'])
+      'Hm, not sure what you mean'])
   },
   humanSupport: () => {
     return 'You sound angry. Call 419 for human support via phone'

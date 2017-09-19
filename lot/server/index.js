@@ -2,76 +2,81 @@
 
 const path = require('path')
 const WebSocket = require('ws')
-const waterfall = require('run-waterfall')
+const chain = require('run-waterfall')
 
-// helpers
+// some small helpers
 const makeCCDB = require('./helpers/makeCCDB')
 const parsePort = require('./helpers/parsePort')
 
-// chain
-const makeManageSessions = require('./chain/makeManageSessions')
-const makeCheckYes = require('./chain/makeCheckYes')
-const rageScorer = require('./chain/rageScorer')
-const tokenizeText = require('./chain/tokenizeText')
-//const _makeCheckAgainstDB = require('./chain/_makeCheckAgainstDB')
-const makeCheckAgainstCCDB = require('./chain/makeCheckAgainstCCDB')
-const _flag = require('./chain/_flag')
-//const _patchProductInfo = require('./chain/_patchProductInfo')
-const _makeChooseResponse = require('./chain/_makeChooseResponse')
-const devlog = require('./chain/devlog')
-
+// server setup
 const host = process.argv[3] || '127.0.0.1'
 const port = parsePort(process.argv[4]) || 50000
 const wsserver = new WebSocket.Server({ host: host, port: port })
 
-const SESSIONS = require('./helpers/makeActiveMap')(10)
+// chain function factories
+const makeManageSessions = require('./chain/makeManageSessions')
+const makeCheckYes = require('./chain/makeCheckYes')
+const makeCheckAgainstCCDB = require('./chain/makeCheckAgainstCCDB')
+const makeChooseResponse = require('./chain/makeChooseResponse')
 
-// global, auto-updated DB
-var CC_DB = makeCCDB(path.join(__dirname, 'data', 'dev', 'cc.json'))
+// app-specific globals
+const SESSIONS = require('./helpers/makeActiveMap')(10)
+var CCDB = makeCCDB(path.join(__dirname, 'data', 'ISO_3166-1_alpha-3.json'))
+
+// chain functions
+const manageSessions = makeManageSessions(SESSIONS)
+const checkYes = makeCheckYes(SESSIONS)
+const rageScorer = require('./chain/rageScorer')
+const tokenizeText = require('./chain/tokenizeText')
+const checkAgainstCCDB = makeCheckAgainstCCDB(CCDB)
+const chooseResponse = makeChooseResponse(SESSIONS)
+const devlog = require('./chain/devlog')
 
 // websocketclient handlers
-const wsErrHandler = err => console.error(`[websocket error: ${err}]`)
-function wsCloseHandler() { // this === ws
-  console.log(`[closed connection: ${this.id}]`)
-}
-function wsMsgHandler(pack) {  // this === ws
+function wsMsgHandler (manageSessions,
+                       checkYes,
+                       checkAgainstCCDB,
+                       chooseResponse,
+                       pack) {
+  var callbackcount = 0
   const e = JSON.parse(pack)
   e.user = { id: this.id }
   e.response = ''
-  // waterfall thru
-  waterfall([
+  chain([
     next => next(null, e),
-    makeManageSessions(this, SESSIONS),
-    makeCheckYes(SESSIONS),
+    manageSessions,
+    checkYes,
     rageScorer,
     tokenizeText,
-  //_makeCheckAgainstDB(),
-  //_flag,
-  //_patchProductInfo,
-  //_makeChooseResponse(SESSIONS),
+    checkAgainstCCDB, // _flag, _patchProductInfo,
+    chooseResponse,
     devlog
   ], (err, e) => {
     if (err) return console.error(err)
-    this.send(JSON.stringify({ text: e.response }))
-    console.log('waterfallthru')
+    if (++callbackcount > 1) return
+    this.send(JSON.stringify({ text: e.response })) // this === ws
   })
-  // const res = 'hi' // waterfall!!!
-  // console.log(`[session ${pack.user.id} incoming: ${pack.text}]`)
-  // console.log(`[session ${pack.user.id} response: ${res}]`)
-  // this.send(JSON.stringify({ text: res }))
 }
+function wsCloseHandler () {
+  console.log(`[closed connection: ${this.id}]`) // this === ws
+}
+const wsErrHandler = err => console.error(`[websocket error: ${err}]`)
 
 // websocketserver handlers
-const wssErrHandler = err => console.error(`[wsserver error: ${err}]`)
-const wssInitHandler = () => console.log(`[wsserver listening on port ${port}]`)
-function wssConHandler(ws/*, httpreq*/) {
-  console.log('[new connection]')
+function wssConHandler (ws/*, httpreq */) {
   ws.id = Math.random().toString()
-  ws.on('error', wsErrHandler)
+  ws.on('message', wsMsgHandler.bind(ws,
+                                     manageSessions,
+                                     checkYes,
+                                     checkAgainstCCDB,
+                                     chooseResponse))
   ws.on('close', wsCloseHandler)
-  ws.on('message', wsMsgHandler)
+  ws.on('error', wsErrHandler)
+  console.log('[new connection]')
 }
+const wssInitHandler = () => console.log(`[wsserver listening on port ${port}]`)
+const wssErrHandler = err => console.error(`[wsserver error: ${err}]`)
 
-wsserver.on('error', wssErrHandler)
-wsserver.on('listening', wssInitHandler)
 wsserver.on('connection', wssConHandler)
+wsserver.on('listening', wssInitHandler)
+wsserver.on('error', wssErrHandler)

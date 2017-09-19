@@ -8,7 +8,7 @@ module.exports = (e, next) => {
       Object.keys(e.stash.hitProducts[pname].flags)
         .filter(_flag => e.stash.hitProducts[pname].flags[_flag]) // _flag: bool
         .map(_flag => {
-          switch(_flag) {
+          switch (_flag) {
             case 'features':
               return `has ${['these', 'cool'][Math.round(Math.random())]} ` +
                 `features - ${andFmtArr(e.stash.hitProducts[pname].features)}`
@@ -38,5 +38,5 @@ module.exports = (e, next) => {
       `The ${pname} ` + (andFmtArr(patches) || 'is awesome ;) [product card]')
   })
   next(null, e)
-  return e // 4 dev tests only, ignored by botpress
+  return e // 4 dev tests only
 }

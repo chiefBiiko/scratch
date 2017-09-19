@@ -1,5 +1,5 @@
 {
-	"name2cc": {
+	"nameToCode": {
 		"Afghanistan": "AFG",
 		"Åland Islands": "ALA",
 		"Albania": "ALB",
@@ -250,7 +250,7 @@
 		"Zambia": "ZMB",
 		"Zimbabwe": "ZWE"
 	},
-	"cc2name": {
+	"codeToName": {
 		"AFG": "Afghanistan",
 		"ALA": "Åland Islands",
 		"ALB": "Albania",

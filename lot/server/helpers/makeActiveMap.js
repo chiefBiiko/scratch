@@ -7,7 +7,7 @@ module.exports = minutes => { // ~delete inactive users after minutes
     SESSIONS.forEach((session, key) => {
       if ((now - session.last_stamp) > 1000 * 60 * minutes) {
         session = null
-        SESSIONS.delete(key) // kill convo after x min inactivity
+        SESSIONS.delete(key) // kill session after x min inactivity
       }
     })
   }, 1000 * 60 * 1) // flush every minute

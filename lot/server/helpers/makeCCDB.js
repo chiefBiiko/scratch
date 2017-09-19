@@ -2,21 +2,16 @@
 
 const fs = require('fs')
 
-module.exports = (CC_DB, minutes = 2) => {
-  var DB = {} // in-memory copy of products collection, updated repeatedly
-  // initial fullfillment
-  fs.readFile(CC_DB, 'utf8', (err, data) => {
-    if (err) throw err
-    DB = JSON.parse(data)
-  })
+module.exports = (CCDB_PATH, minutes = 1) => {
+  var CCDB = JSON.parse(fs.readFileSync(CCDB_PATH, 'utf8'))
   // schedule update
   setInterval(() => { // updating DB every minutes
-    console.log(`updating DB @ ${new Date().toUTCString()}...`)
-    fs.readFile(CC_DB, 'utf8', (err, data) => {
+    fs.readFile(CCDB_PATH, 'utf8', (err, data) => {
       if (err) throw err
-      DB = JSON.parse(data)
+      console.log(`updating DB @ ${new Date().toUTCString()}...`)
+      CCDB = JSON.parse(data)
     })
   }, 1000 * 60 * minutes)
   // returning an updating DB
-  return DB
+  return CCDB
 }
