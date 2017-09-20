@@ -7,7 +7,8 @@ const path = require('path')
 
 const parsePort = require('./../helpers/parsePort')
 const randomArrPick = require('./../helpers/randomArrPick')
-const fmtContent = require('./../helpers/fmtContent.js')
+const fmtGeneric = require('./../helpers/fmtGeneric.js')
+const fmtFAQ = require('./../helpers/fmtFAQ')
 const andFmtArr = require('./../helpers/andFmtArr')
 const toTitleCase = require('./../helpers/toTitleCase')
 const checkForUserName = require('./../helpers/checkForUserName')
@@ -40,15 +41,27 @@ describe('helpers', () => {
       arr.should.include(randomArrPick(arr))
     })
   })
-  describe('fmtContent', () => {
+  describe('fmtGeneric', () => {
     it('should be an object', () => {
-      fmtContent.should.be.an('object')
+      fmtGeneric.should.be.an('object')
     })
     it('should be an object with a bunch methods', () => {
-      Object.keys(fmtContent).forEach(key => {
-        fmtContent[key].should.be.a('function')
+      Object.keys(fmtGeneric).forEach(key => {
+        fmtGeneric[key].should.be.a('function')
       })
-      // fmtContent.welcome.should.be.a('function')
+    })
+  })
+  describe('fmtFAQ', () => {
+    it('should be an object', () => {
+      fmtFAQ.should.be.an('object')
+    })
+    it('should be an object with a bunch of methods', () => {
+      Object.keys(fmtFAQ).forEach(key => {
+        fmtFAQ[key].should.be.a('function')
+      })
+    })
+    it('should provide an object', () => {
+
     })
   })
   describe('andFmtArr', () => {
@@ -245,15 +258,28 @@ describe('chain', () => {
   describe('makeChooseResponse', () => {
     const SESSIONS = makeActiveMap(1) // dependency
     const chooseResponse = makeChooseResponse(SESSIONS)
+    const answer = chooseResponse({
+      text: 'Let me reset my password',
+      response: '',
+      interactive: {},
+      user: { id: 'xyz' },
+      stash: { nameToCode: {}, codeToName: {} }
+    }, () => {})
     it('should return a function', () => {
       chooseResponse.should.be.a('function')
     })
     it('should return a function that sets a response on e', () => {
-      chooseResponse({
-        user: { id: 'xyz' },
-        stash: { nameToCode: {}, codeToName: {} },
-        response: ''
-      }, () => {}).response.should.not.be.empty
+      answer.response.should.not.be.empty
+    })
+    it('should detect FAQ, fx password related', () => {
+      answer.response.should.include('password')
+    })
+    it('should return e with an .interactive object', () => {
+      answer.interactive.should.be.an('object')
+    })
+    it('should return an object on e.interactive.link, fx', () => {
+      answer.interactive.link.should.be.an('object')
+      answer.interactive.link.should.have.all.keys('text', 'href')
     })
   })
 })

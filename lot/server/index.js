@@ -42,6 +42,7 @@ function wsMsgHandler (manageSessions,
   const e = JSON.parse(pack)
   e.user = { id: this.id }
   e.response = ''
+  e.interactive = {}
   chain([
     next => next(null, e),
     manageSessions,
@@ -54,7 +55,10 @@ function wsMsgHandler (manageSessions,
   ], (err, e) => {
     if (err) return console.error(err)
     if (++callbackcount > 1) return
-    this.send(JSON.stringify({ text: e.response })) // this === ws
+    this.send(JSON.stringify({ // this === ws
+      text: e.response,
+      interactive: e.interactive
+    }))
   })
 }
 function wsCloseHandler () {
@@ -72,7 +76,7 @@ function wssConHandler (ws/*, httpreq */) {
                                      chooseResponse))
   ws.on('close', wsCloseHandler)
   ws.on('error', wsErrHandler)
-  console.log('[new connection]')
+  console.log(`[new connection: ${ws.id}]`)
 }
 const wssInitHandler = () => console.log(`[wsserver listening on port ${port}]`)
 const wssErrHandler = err => console.error(`[wsserver error: ${err}]`)

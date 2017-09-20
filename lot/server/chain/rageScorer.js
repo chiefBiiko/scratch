@@ -1,12 +1,12 @@
 'use strict'
 
 const sentiment = require('sentiment')
-const fmtContent = require('./../helpers/fmtContent')
+const fmtGeneric = require('./../helpers/fmtGeneric')
 
 module.exports = (e, next) => {
   if (e.response) next(null, e)
   if (sentiment(e.text).score < 0) {
-    e.response = fmtContent.humanSupport()
+    e.response = fmtGeneric.humanSupport()
   }
   next(null, e)
   return e // 4 dev tests only
