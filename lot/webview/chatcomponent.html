@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>chatbot client</title>
+    <script>
+      "use strict"
+      function initChatBotComponent() {
+        const websocket = new WebSocket('ws://127.0.0.1:50000')
+        // DOM elements
+        const component = document.querySelector('#chatbot-component')
+        const msgboard = document.querySelector('#chatbot-component-msgboard')
+        const stdusr = document.querySelector('#chatbot-component-userinput')
+        // DOM elements' styling
+        component.style.font = 'normal normal 16px Verdana, sans-serif'
+        component.style.height = 'auto'
+        component.style.width = '300px'
+        component.style.border = '1px solid #e6e6e6'
+        msgboard.style.boxSizing = 'border-box'
+        msgboard.style.color = '#fff'
+        msgboard.style.height = '330px'
+        msgboard.style.width = 'inherit'
+        msgboard.style.wordWrap = 'break-word'
+        msgboard.style.overflowY = 'scroll'
+        msgboard.style.padding = '5px'
+        stdusr.style.boxSizing = 'border-box'
+        stdusr.style.font = 'inherit'
+        stdusr.style.width = '100%'
+        // helpers
+        function makeMsgBox(type, text) { // type 'usr' or 'bot'
+          const msgbox = window.document.createElement('div')
+          msgbox.innerText = text
+          msgbox.style.backgroundColor = '#007dc5'
+          msgbox.style.borderRadius = '2px'
+          msgbox.style.marginBottom = '10px'
+          msgbox.style.padding = '5px'
+          if (type === 'usr') msgbox.style.textAlign = 'right'
+          return msgbox
+        }
+        function makeLink(href, text=href.replace(/^.+\/([^/]+)$/, '$1')) {
+          const link = window.document.createElement('a')
+          link.href = href
+          link.textContent = text
+          link.target = '_blank'
+          link.style.display = 'inline-block'
+          link.style.marginBottom = '10px'
+          link.style.wordWrap = 'break-word'
+          return link
+        }
+        // event handlers
+        function userInputHandler(e) {
+          if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
+            msgboard.appendChild(makeMsgBox('usr', stdusr.value))
+            websocket.send(JSON.stringify({ text: stdusr.value }))
+            stdusr.value = ''
+            msgboard.scrollTop = msgboard.scrollHeight
+          }
+        }
+        function botReplyHandler(e) {
+          const pack = JSON.parse(e.data)
+          msgboard.appendChild(makeMsgBox('bot', pack.text))
+          if (pack.interactive.hasOwnProperty('link')) {
+            console.log(pack)
+            msgboard.appendChild(makeLink(pack.interactive.link.href,
+                                          pack.interactive.link.text))
+          }
+          msgboard.scrollTop = msgboard.scrollHeight
+        }
+        // registering event handlers
+        component.onclick = () => stdusr.focus()
+        stdusr.onkeyup = userInputHandler
+        websocket.onmessage = botReplyHandler
+      }
+      window.onload = initChatBotComponent
+    </script>
+  </head>
+  <body>
+    <div id="chatbot-component">
+      <div id="chatbot-component-msgboard"></div>
+      <input id="chatbot-component-userinput" type="text" placeholder="chat..."
+      autofocus>
+    </div>
+  </body>
+</html>
