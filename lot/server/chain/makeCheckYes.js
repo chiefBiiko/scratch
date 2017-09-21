@@ -2,7 +2,7 @@
 
 module.exports = SESSIONS => {
   const checkYes = (e, next) => {
-    if (e.response) next(null, e)
+    if (e.response)  next(null, e)
     const session = SESSIONS.get(e.user.id)
     if (session.onyes && /^\s*(yes|yea|ya|y)\s*$/i.test(e.text)) {
       e.response = session.onyes

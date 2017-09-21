@@ -50,6 +50,9 @@ describe('helpers', () => {
         fmtGeneric[key].should.be.a('function')
       })
     })
+    it('should be an object with a bunch methods that return objects', () => {
+      fmtGeneric.welcome().should.be.an('object')
+    })
   })
   describe('fmtFAQ', () => {
     it('should be an object', () => {
@@ -60,8 +63,11 @@ describe('helpers', () => {
         fmtFAQ[key].should.be.a('function')
       })
     })
-    it('should provide an object', () => {
-
+    it('should be an object with a bunch methods that return objects', () => {
+      fmtFAQ.login().should.be.an('object')
+    })
+    it('should put arrays on e.interactive.!text', () => {
+       fmtFAQ.login().quickCopies.should.be.an('array')
     })
   })
   describe('andFmtArr', () => {
@@ -277,9 +283,9 @@ describe('chain', () => {
     it('should return e with an .interactive object', () => {
       answer.interactive.should.be.an('object')
     })
-    it('should return an object on e.interactive.link, fx', () => {
-      answer.interactive.link.should.be.an('object')
-      answer.interactive.link.should.have.all.keys('text', 'href')
+    it('should return an array of objects on e.interactive.links, fx', () => {
+      answer.interactive.links.should.be.an('array')
+      answer.interactive.links[0].should.have.all.keys('href', 'text')
     })
   })
 })

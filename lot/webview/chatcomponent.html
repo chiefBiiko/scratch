@@ -5,12 +5,20 @@
     <title>chatbot client</title>
     <script>
       "use strict"
-      function initChatBotComponent() {
-        const websocket = new WebSocket('ws://127.0.0.1:50000')
+      function initChatbotComponent(e,
+                                    serveraddress='ws://127.0.0.1:50000',
+                                    selector='#chatbot-component') {
+        const websocket = new WebSocket(serveraddress)
         // DOM elements
-        const component = document.querySelector('#chatbot-component')
-        const msgboard = document.querySelector('#chatbot-component-msgboard')
-        const stdusr = document.querySelector('#chatbot-component-userinput')
+        const component = document.querySelector(selector)
+        const msgboard = document.createElement('div')
+        const stdusr = document.createElement('input')
+        // assembling DOM elements
+        component.appendChild(msgboard)
+        component.appendChild(stdusr)
+        stdusr.type = 'text'
+        stdusr.placeholder = 'chat...'
+        stdusr.focus()
         // DOM elements' styling
         component.style.font = 'normal normal 16px Verdana, sans-serif'
         component.style.height = 'auto'
@@ -26,9 +34,9 @@
         stdusr.style.boxSizing = 'border-box'
         stdusr.style.font = 'inherit'
         stdusr.style.width = '100%'
-        // helpers
+        // helper factories
         function makeMsgBox(type, text) { // type 'usr' or 'bot'
-          const msgbox = window.document.createElement('div')
+          const msgbox = document.createElement('div')
           msgbox.innerText = text
           msgbox.style.backgroundColor = '#007dc5'
           msgbox.style.borderRadius = '2px'
@@ -38,13 +46,12 @@
           return msgbox
         }
         function makeLink(href, text=href.replace(/^.+\/([^/]+)$/, '$1')) {
-          const link = window.document.createElement('a')
+          const link = document.createElement('a')
           link.href = href
           link.textContent = text
           link.target = '_blank'
           link.style.display = 'inline-block'
           link.style.marginBottom = '10px'
-          link.style.wordWrap = 'break-word'
           return link
         }
         // event handlers
@@ -58,11 +65,12 @@
         }
         function botReplyHandler(e) {
           const pack = JSON.parse(e.data)
-          msgboard.appendChild(makeMsgBox('bot', pack.text))
-          if (pack.interactive.hasOwnProperty('link')) {
-            console.log(pack)
-            msgboard.appendChild(makeLink(pack.interactive.link.href,
-                                          pack.interactive.link.text))
+          console.log(pack)
+          msgboard.appendChild(makeMsgBox('bot', pack.response))
+          if (pack.interactive.hasOwnProperty('links')) {
+            pack.interactive.links.forEach(link => {
+              msgboard.appendChild(makeLink(link.href, link.text))
+            })
           }
           msgboard.scrollTop = msgboard.scrollHeight
         }
@@ -71,14 +79,10 @@
         stdusr.onkeyup = userInputHandler
         websocket.onmessage = botReplyHandler
       }
-      window.onload = initChatBotComponent
+      window.onload = initChatbotComponent
     </script>
   </head>
   <body>
-    <div id="chatbot-component">
-      <div id="chatbot-component-msgboard"></div>
-      <input id="chatbot-component-userinput" type="text" placeholder="chat..."
-      autofocus>
-    </div>
+    <div id="chatbot-component"></div>
   </body>
 </html>

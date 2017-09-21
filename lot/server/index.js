@@ -1,17 +1,28 @@
 'use strict'
 
+const fs = require('fs')
+const https = require('https')
 const path = require('path')
 const WebSocket = require('ws')
 const chain = require('run-waterfall')
 
 // some small helpers
+const makeActiveMap = require('./helpers/makeActiveMap')
 const makeCCDB = require('./helpers/makeCCDB')
 const parsePort = require('./helpers/parsePort')
 
 // server setup
 const host = process.argv[3] || '127.0.0.1'
 const port = parsePort(process.argv[4]) || 50000
-const wsserver = new WebSocket.Server({ host: host, port: port })
+const httpsserver = https.createServer({
+  key: fs.readFileSync('./crypto/key.pem'), // need 2 have these signed 4 wss
+  cert: fs.readFileSync('./crypto/cert.pem')
+})
+const wsserver = new WebSocket.Server({
+  host: host,
+  port: port,
+  server: httpsserver
+})
 
 // chain function factories
 const makeManageSessions = require('./chain/makeManageSessions')
@@ -20,7 +31,7 @@ const makeCheckAgainstCCDB = require('./chain/makeCheckAgainstCCDB')
 const makeChooseResponse = require('./chain/makeChooseResponse')
 
 // app-specific globals
-const SESSIONS = require('./helpers/makeActiveMap')(10)
+const SESSIONS = makeActiveMap(10)
 var CCDB = makeCCDB(path.join(__dirname, 'data', 'ISO_3166-1_alpha-3.json'))
 
 // chain functions
@@ -36,7 +47,7 @@ const devlog = require('./chain/devlog')
 function wsMsgHandler (manageSessions,
                        checkYes,
                        checkAgainstCCDB,
-                       chooseResponse,
+                       chooseResponse, // binding all the above in wssConHandler
                        pack) {
   var callbackcount = 0
   const e = JSON.parse(pack)
@@ -56,7 +67,7 @@ function wsMsgHandler (manageSessions,
     if (err) return console.error(err)
     if (++callbackcount > 1) return
     this.send(JSON.stringify({ // this === ws
-      text: e.response,
+      response: e.response,
       interactive: e.interactive
     }))
   })
@@ -69,7 +80,7 @@ const wsErrHandler = err => console.error(`[websocket error: ${err}]`)
 // websocketserver handlers
 function wssConHandler (ws/*, httpreq */) {
   ws.id = Math.random().toString()
-  ws.on('message', wsMsgHandler.bind(ws,
+  ws.on('message', wsMsgHandler.bind(ws, // passing ws as thisArg
                                      manageSessions,
                                      checkYes,
                                      checkAgainstCCDB,

@@ -7,12 +7,14 @@ module.exports = SESSIONS => {
   const manageSessions = (e, next) => { // closes over ESSIONS
     const name = checkForUserName(e.text)
     if (!SESSIONS.has(e.user.id)) { // new session
-      e.response = fmtGeneric.welcome(name)
+      const welcome = fmtGeneric.welcome(name)
+      e.response = welcome.text
+      e.interactive = welcome.buttons
       SESSIONS.set(e.user.id, { // ...and store it
         name: name,
         last_query: e.text,
         last_stamp: new Date().getTime(),
-        onyes: ''
+        onyes: '' // on: {} // 
       })
     } else { // existing session
       const session = SESSIONS.get(e.user.id)
@@ -20,13 +22,13 @@ module.exports = SESSIONS => {
       session.last_stamp = new Date().getTime()
       if (!session.name && name) {
         session.name = name
-        e.response = fmtGeneric.nice2Meet(name)
+        e.response = fmtGeneric.nice2Meet(name).text
       }
       SESSIONS.set(e.user.id, session)
       if (!e.response && /^(hi|hallo|hello|hey)/i.test(e.text)) {
-        e.response = fmtGeneric.welcomeAgain(session.name || name)
+        e.response = fmtGeneric.welcomeAgain(session.name || name).text
       } else if (/bye|goodbye|see you|see ya|later/i.test(e.text)) {
-        e.response = fmtGeneric.bye(name)
+        e.response = fmtGeneric.bye(name).text
       }
     }
     next(null, e)

@@ -7,16 +7,16 @@ module.exports = {
       text: 'To log in, please use the login details provided by Konica ' +
              'Minolta.\nIf you do not have your login credentials, ' +
              'please get in touch with customerportal@konicaminolta.eu.',
-      quickCopy: 'customerportal@konicaminolta.eu'
+      quickCopies: [ 'customerportal@konicaminolta.eu' ]
     }
   },
   resetPassword: () => {
     return {
       text: 'To reset or change your password, please visit below link',
-      link: {
+      links: [{
         href: 'https://infohub.konicaminolta.eu',
         text: 'infohub.konicaminolta.eu'
-      }
+      }]
     }
   },
   howItWorks: () => {
@@ -36,11 +36,11 @@ module.exports = {
     return {
       text: 'To read more about bizView`s data security, please have a look ' +
             'at the Security Whitepaper linked below',
-      link: {
+      links: [{
         href: 'https://bizview-test.konicaminolta.eu/res/docs/' +
               'BEU_bizView_Security_Whitepaper_V1.0.pdf',
         text: 'Security Whitepaper'
-      }
+      }]
     }
   }
 }
