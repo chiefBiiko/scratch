@@ -45,7 +45,7 @@
           if (type === 'usr') msgbox.style.textAlign = 'right'
           return msgbox
         }
-        function makeLink(href, text=href.replace(/^.+\/([^/]+)$/, '$1')) {
+        function makeLink(href, text) {
           const link = document.createElement('a')
           link.href = href
           link.textContent = text
@@ -54,30 +54,60 @@
           link.style.marginBottom = '10px'
           return link
         }
+        function makeButton(websocket, value, text, sharedclass) {
+          const btn = document.createElement('button')
+          btn.value = value
+          btn.innerText = text
+          btn.className = sharedclass
+          btn.style.display = 'block'
+          btn.style.width = '100%'
+          btn.style.marginBottom = '10px'
+          btn.style.font = 'normal normal 16px Verdana, sans-serif'
+          btn.onclick = ((websocket, sharedclass, e) => {
+            websocket.send(JSON.stringify({
+              text: '',
+              on: e.target.value // aka btn.value
+            }))
+            Array.from(document.getElementsByClassName(sharedclass))
+              .forEach(btn => btn.disabled = true)
+          }).bind(null, websocket, sharedclass)
+          return btn
+        }
         // event handlers
-        function userInputHandler(e) {
+        function usrInputHandler(msgboard, stdusr, websocket, e) {
           if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
             msgboard.appendChild(makeMsgBox('usr', stdusr.value))
-            websocket.send(JSON.stringify({ text: stdusr.value }))
+            websocket.send(JSON.stringify({
+              text: stdusr.value // , on: null
+            }))
             stdusr.value = ''
             msgboard.scrollTop = msgboard.scrollHeight
           }
         }
-        function botReplyHandler(e) {
+        function botReplyHandler(websocket, msgboard, e) {
           const pack = JSON.parse(e.data)
-          console.log(pack)
-          msgboard.appendChild(makeMsgBox('bot', pack.response))
-          if (pack.interactive.hasOwnProperty('links')) {
-            pack.interactive.links.forEach(link => {
+          console.log(JSON.stringify(pack))
+          msgboard.appendChild(makeMsgBox('bot', pack.response.text))
+          if (pack.response.hasOwnProperty('links')) {
+            pack.response.links.forEach(link => {
               msgboard.appendChild(makeLink(link.href, link.text))
+            })
+          }
+          if (pack.response.hasOwnProperty('buttons')) {
+            const timestamp = new Date().getTime()
+            pack.response.buttons.forEach(btn => {
+              msgboard.appendChild(makeButton(websocket,
+                                              btn.value,
+                                              btn.text,
+                                              timestamp)) // as sharedclass
             })
           }
           msgboard.scrollTop = msgboard.scrollHeight
         }
         // registering event handlers
         component.onclick = () => stdusr.focus()
-        stdusr.onkeyup = userInputHandler
-        websocket.onmessage = botReplyHandler
+        stdusr.onkeyup = usrInputHandler.bind(null, msgboard, stdusr, websocket)
+        websocket.onmessage = botReplyHandler.bind(null, websocket, msgboard)
       }
       window.onload = initChatbotComponent
     </script>

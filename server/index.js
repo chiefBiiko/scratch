@@ -15,8 +15,8 @@ const parsePort = require('./helpers/parsePort')
 const host = process.argv[3] || '127.0.0.1'
 const port = parsePort(process.argv[4]) || 50000
 const httpsserver = https.createServer({
-  key: fs.readFileSync('./crypto/key.pem'), // need 2 have these signed 4 wss
-  cert: fs.readFileSync('./crypto/cert.pem')
+  key: fs.readFileSync('./tls/key.pem'), // need 2 have these signed 4 wss
+  cert: fs.readFileSync('./tls/cert.pem')
 })
 const wsserver = new WebSocket.Server({
   host: host,
@@ -26,7 +26,7 @@ const wsserver = new WebSocket.Server({
 
 // chain function factories
 const makeManageSessions = require('./chain/makeManageSessions')
-const makeCheckYes = require('./chain/makeCheckYes')
+const makeCheckOn = require('./chain/makeCheckOn')
 const makeCheckAgainstCCDB = require('./chain/makeCheckAgainstCCDB')
 const makeChooseResponse = require('./chain/makeChooseResponse')
 
@@ -36,7 +36,7 @@ var CCDB = makeCCDB(path.join(__dirname, 'data', 'ISO_3166-1_alpha-3.json'))
 
 // chain functions
 const manageSessions = makeManageSessions(SESSIONS)
-const checkYes = makeCheckYes(SESSIONS)
+const checkOn = makeCheckOn(SESSIONS)
 const rageScorer = require('./chain/rageScorer')
 const tokenizeText = require('./chain/tokenizeText')
 const checkAgainstCCDB = makeCheckAgainstCCDB(CCDB)
@@ -45,19 +45,21 @@ const devlog = require('./chain/devlog')
 
 // websocketclient handlers
 function wsMsgHandler (manageSessions,
-                       checkYes,
+                       checkOn,
                        checkAgainstCCDB,
                        chooseResponse, // binding all the above in wssConHandler
                        pack) {
   var callbackcount = 0
-  const e = JSON.parse(pack)
+  const e = JSON.parse(pack) // e has .text already, and perhaps .on
   e.user = { id: this.id }
-  e.response = ''
-  e.interactive = {}
+  e.tokens = []
+  e.stash = {}
+  e.response = {}
+  if (!e.hasOwnProperty('on')) e.on = '' // TODO make sure e.on is a string if existing
   chain([
     next => next(null, e),
     manageSessions,
-    checkYes,
+    checkOn,
     rageScorer,
     tokenizeText,
     checkAgainstCCDB, // _flag, _patchProductInfo,
@@ -82,7 +84,7 @@ function wssConHandler (ws/*, httpreq */) {
   ws.id = Math.random().toString()
   ws.on('message', wsMsgHandler.bind(ws, // passing ws as thisArg
                                      manageSessions,
-                                     checkYes,
+                                     checkOn,
                                      checkAgainstCCDB,
                                      chooseResponse))
   ws.on('close', wsCloseHandler)

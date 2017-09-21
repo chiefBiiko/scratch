@@ -18,7 +18,7 @@ const makeActiveMap = require('./../helpers/makeActiveMap')
 const makeCCDB = require('./../helpers/makeCCDB')
 
 const makeManageSessions = require('./../chain/makeManageSessions')
-const makeCheckYes = require('./../chain/makeCheckYes')
+const makeCheckOn = require('./../chain/makeCheckOn')
 const rageScorer = require('./../chain/rageScorer')
 const tokenizeText = require('./../chain/tokenizeText')
 const makeCheckAgainstCCDB = require('./../chain/makeCheckAgainstCCDB')
@@ -66,7 +66,7 @@ describe('helpers', () => {
     it('should be an object with a bunch methods that return objects', () => {
       fmtFAQ.login().should.be.an('object')
     })
-    it('should put arrays on e.interactive.!text', () => {
+    it('should have methods that return a e.interactives aside e.text', () => {
        fmtFAQ.login().quickCopies.should.be.an('array')
     })
   })
@@ -150,24 +150,27 @@ describe('chain', () => {
       manageSessions({ text: 'Hi Ho', user: { id: 'xyz' } }, () => {})
       const session = SESSIONS.get('xyz')
       session.should.be.an('object')
-      session.should.have.all.keys(/* 'ws', */'name', 'last_query',
-                                   'last_stamp', 'onyes')
+      session.should.have.all.keys('name', 'last_query', 'last_stamp', 'on')
     })
   })
-  describe('makeCheckYes', () => {
+  describe('makeCheckOn', () => {
     const SESSIONS = makeActiveMap(1)
-    const checkYes = makeCheckYes(SESSIONS)
+    const checkOn = makeCheckOn(SESSIONS)
     it('should return a function', () => {
-      checkYes.should.be.a('function')
+      checkOn.should.be.a('function')
     })
     it('should factor a function that resets e.text when asserting', () => {
       SESSIONS.set('xyz', {
-        ws: { send: a => {} },
         last_stamp: 1504786753609, // .last_stamp must be a timestamp
-        onyes: 'prepared response'
+        on: { yes: { text: 'prepared response' } }
       })
-      checkYes({ text: 'yes', user: { id: 'xyz' } }, () => {})
-      SESSIONS.get('xyz').onyes.should.be.empty
+      checkOn({
+        text: 'yes',
+        response: {},
+        user: { id: 'xyz' },
+        on: 'yes'
+      }, () => {})
+      SESSIONS.get('xyz').on.should.be.empty
     })
   })
   describe('tokenizeText', () => {
@@ -191,7 +194,8 @@ describe('chain', () => {
     })
     const e = checkAgainstCCDB({
       text: 'country code Germany',
-      tokens: [ 'country', 'code', 'Germany' ]
+      tokens: [ 'country', 'code', 'Germany' ],
+      response: {}
     }, () => {})
     it('should return a function', () => {
       checkAgainstCCDB.should.be.a('function')
@@ -264,7 +268,7 @@ describe('chain', () => {
   describe('makeChooseResponse', () => {
     const SESSIONS = makeActiveMap(1) // dependency
     const chooseResponse = makeChooseResponse(SESSIONS)
-    const answer = chooseResponse({
+    const choice = chooseResponse({
       text: 'Let me reset my password',
       response: '',
       interactive: {},
@@ -274,18 +278,15 @@ describe('chain', () => {
     it('should return a function', () => {
       chooseResponse.should.be.a('function')
     })
-    it('should return a function that sets a response on e', () => {
-      answer.response.should.not.be.empty
+    it('should return a function that sets a response object on e', () => {
+      choice.response.should.be.an('object')
     })
     it('should detect FAQ, fx password related', () => {
-      answer.response.should.include('password')
-    })
-    it('should return e with an .interactive object', () => {
-      answer.interactive.should.be.an('object')
+      choice.response.text.should.include('password')
     })
     it('should return an array of objects on e.interactive.links, fx', () => {
-      answer.interactive.links.should.be.an('array')
-      answer.interactive.links[0].should.have.all.keys('href', 'text')
+      choice.response.links.should.be.an('array')
+      choice.response.links[0].should.have.all.keys('href', 'text')
     })
   })
 })

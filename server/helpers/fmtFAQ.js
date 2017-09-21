@@ -2,7 +2,7 @@
 
 module.exports = {
   // FAQ content
-  login: () => { // make trailing email address copyable to clipboard by click!
+  login: () => { // make email address copyable to clipboard by click!
     return {
       text: 'To log in, please use the login details provided by Konica ' +
              'Minolta.\nIf you do not have your login credentials, ' +

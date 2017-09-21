@@ -5,6 +5,7 @@ const matchExAx = require('./../helpers/matchExAx')
 module.exports = CCDB => {
   // assemble factory return
   const checkAgainstCCDB = (e, next) => { // closes over CCDB
+    if (Object.keys(e.response).length) next(null, e)
     // CCDB subsets
     const countrynames = Object.keys(CCDB.nameToCode)
     const countrycodes = Object.keys(CCDB.codeToName)

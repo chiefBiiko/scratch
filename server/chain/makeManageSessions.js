@@ -4,17 +4,19 @@ const checkForUserName = require('./../helpers/checkForUserName')
 const fmtGeneric = require('./../helpers/fmtGeneric')
 
 module.exports = SESSIONS => {
-  const manageSessions = (e, next) => { // closes over ESSIONS
+  const manageSessions = (e, next) => { // closes over SESSIONS
     const name = checkForUserName(e.text)
     if (!SESSIONS.has(e.user.id)) { // new session
-      const welcome = fmtGeneric.welcome(name)
-      e.response = welcome.text
-      e.interactive = welcome.buttons
+      e.response = fmtGeneric.welcome(name)
       SESSIONS.set(e.user.id, { // ...and store it
         name: name,
         last_query: e.text,
         last_stamp: new Date().getTime(),
-        onyes: '' // on: {} // 
+        on: {
+          inventory: { text: 'inventory++' },
+          volumes: { text: 'volumes++' },
+          invoice: { text: 'invoice++' }
+        }
       })
     } else { // existing session
       const session = SESSIONS.get(e.user.id)
@@ -22,13 +24,14 @@ module.exports = SESSIONS => {
       session.last_stamp = new Date().getTime()
       if (!session.name && name) {
         session.name = name
-        e.response = fmtGeneric.nice2Meet(name).text
+        e.response = fmtGeneric.nice2Meet(name)
       }
       SESSIONS.set(e.user.id, session)
-      if (!e.response && /^(hi|hallo|hello|hey)/i.test(e.text)) {
-        e.response = fmtGeneric.welcomeAgain(session.name || name).text
+      if (!Object.keys(e.response).length &&
+          /^(hi|hallo|hello|hey)/i.test(e.text)) {
+        e.response = fmtGeneric.welcomeAgain(session.name || name)
       } else if (/bye|goodbye|see you|see ya|later/i.test(e.text)) {
-        e.response = fmtGeneric.bye(name).text
+        e.response = fmtGeneric.bye(name)
       }
     }
     next(null, e)

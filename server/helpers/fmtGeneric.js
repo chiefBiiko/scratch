@@ -6,8 +6,8 @@ module.exports = {
   // generic content
   welcome: name => {
     return {
-      text: `${randomArrPick([ 'Hey', 'Hello' ])} ${name || ''}\n` +
-        `I provide info on tech products, their features, prices, and ratings`,
+      text: `${randomArrPick([ 'Hi', 'Hello' ])} ${name || ''}\n` +
+        `I can provide you with insights about your...`,
       buttons: [
         { text: 'Inventory', value: 'inventory'},
         { text: 'Volumes', value: 'volumes' },
