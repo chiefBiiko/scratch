@@ -15,7 +15,7 @@ module.exports = SESSIONS => {
         on: {
           inventory: { text: 'inventory++' },
           volumes: { text: 'volumes++' },
-          invoice: { text: 'invoice++' }
+          invoices: { text: 'invoices++' }
         }
       })
     } else { // existing session

@@ -5,7 +5,8 @@ const should = chai.should()
 
 const path = require('path')
 
-const parsePort = require('./../helpers/parsePort')
+const isString = require('./../helpers/isString')
+const parsePortOrNull = require('./../helpers/parsePortOrNull')
 const randomArrPick = require('./../helpers/randomArrPick')
 const fmtGeneric = require('./../helpers/fmtGeneric.js')
 const fmtFAQ = require('./../helpers/fmtFAQ')
@@ -15,32 +16,54 @@ const checkForUserName = require('./../helpers/checkForUserName')
 const replaceOrFalsy = require('./../helpers/replaceOrFalsy')
 const matchExAx = require('./../helpers/matchExAx')
 const makeActiveMap = require('./../helpers/makeActiveMap')
-const makeCCDB = require('./../helpers/makeCCDB')
+const makeCountryCodeDB = require('./../helpers/makeCountryCodeDB')
 
 const makeManageSessions = require('./../chain/makeManageSessions')
 const makeCheckOn = require('./../chain/makeCheckOn')
 const rageScorer = require('./../chain/rageScorer')
 const tokenizeText = require('./../chain/tokenizeText')
-const makeCheckAgainstCCDB = require('./../chain/makeCheckAgainstCCDB')
-const _flag = require('./../chain/_flag')
-const _patchProductInfo = require('./../chain/_patchProductInfo')
+const makeCheckAgainstCountryCodeDB =
+  require('./../chain/makeCheckAgainstCountryCodeDB')
+// const _flag = require('./../chain/_flag')
+// const _patchProductInfo = require('./../chain/_patchProductInfo')
 const makeChooseResponse = require('./../chain/makeChooseResponse')
 
 describe('helpers', () => {
-  describe('parsePort', () => {
+
+  describe('isString', () => {
+    it('should detect all possible forms of strings', () => {
+      isString('').should.be.true
+      isString(`dir:${__dirname}`).should.be.true
+      isString(JSON.stringify([4,1,9])).should.be.true
+      isString('ordinary string').should.be.true
+      isString(new String()).should.be.true
+      isString(new String('wrapped string')).should.be.true
+    })
+
+  })
+
+  describe('parsePortOrNull', () => {
     it('should parse a string sequence of digits to a number', () => {
-      parsePort('12345').should.equal(12345)
+      parsePortOrNull('12345').should.equal(12345)
     })
     it('should return null if the string contains anything but digits', () => {
-      should.equal(parsePort('123noise'), null)
+      should.equal(parsePortOrNull('123noise'), null)
+    })
+    it('should return null if argument is falsey', () => {
+      should.equal(parsePortOrNull(false), null)
+      should.equal(parsePortOrNull(''), null)
+      should.equal(parsePortOrNull(null), null)
+      should.equal(parsePortOrNull(undefined), null)
     })
   })
+
   describe('randomArrPick', () => {
     it('should quasi-randomly pick an item from an array', () => {
       const arr = ['a', 'b', 'c']
       arr.should.include(randomArrPick(arr))
     })
   })
+
   describe('fmtGeneric', () => {
     it('should be an object', () => {
       fmtGeneric.should.be.an('object')
@@ -54,6 +77,7 @@ describe('helpers', () => {
       fmtGeneric.welcome().should.be.an('object')
     })
   })
+
   describe('fmtFAQ', () => {
     it('should be an object', () => {
       fmtFAQ.should.be.an('object')
@@ -70,6 +94,7 @@ describe('helpers', () => {
        fmtFAQ.login().quickCopies.should.be.an('array')
     })
   })
+
   describe('andFmtArr', () => {
     it('should return a string', () => {
       andFmtArr(['pizza', 'pasta', 'burgers']).should.be.a('string')
@@ -82,6 +107,7 @@ describe('helpers', () => {
       andFmtArr([1]).should.equal('1')
     })
   })
+
   describe('toTitleCase', () => {
     it('should uppercase the first letter of a string', () => {
       toTitleCase('chief').should.equal('Chief')
@@ -93,6 +119,7 @@ describe('helpers', () => {
       toTitleCase('').should.equal('')
     })
   })
+
   describe('checkForUserName', () => {
     it('should extract a name from a "my name is..." statement', () => {
       checkForUserName('wahala my name is kweku mensa').should.equal('Kweku')
@@ -101,6 +128,7 @@ describe('helpers', () => {
       checkForUserName('my number one food is pizza').should.equal('')
     })
   })
+
   describe('replaceOrFalsy', () => {
     it('should return a string in case of a replacement', () => {
       replaceOrFalsy('abc', /[ci]/, 'z').should.equal('abz')
@@ -109,6 +137,7 @@ describe('helpers', () => {
       replaceOrFalsy('abc', 'y', 'z').should.equal('')
     })
   })
+
   describe('matchExAx', () => {
     const x = matchExAx('buy me an ipad pro',
                         ['buy', 'me', 'an', 'ipad', 'pro'],
@@ -117,6 +146,7 @@ describe('helpers', () => {
       x.should.be.an('array')
     })
   })
+
   describe('makeActiveMap', () => {
     it('should return an ~auto-flush map', done => {
       const SESSIONS = makeActiveMap(1)
@@ -127,19 +157,28 @@ describe('helpers', () => {
       }, 1000 * 61)       // exec timeout
     }).timeout(1000 * 63) // test timeout
   })
-  describe('makeCCDB', () => {
+
+  describe('makeCountryCodeDB', () => {
     it('should return an object', () => {
-      makeCCDB(path.join(__dirname, '..', 'data', 'ISO_3166-1_alpha-3.json'), 1)
+      makeCountryCodeDB(path.join(__dirname,
+                                  '..',
+                                  'data',
+                                  'ISO_3166-1_alpha-3.json'))
         .should.be.an('object')
     })
     it('should return an object with .nameToCode and .codeToName', () => {
-      makeCCDB(path.join(__dirname, '..', 'data', 'ISO_3166-1_alpha-3.json'), 1)
+      makeCountryCodeDB(path.join(__dirname,
+                                  '..',
+                                  'data',
+                                  'ISO_3166-1_alpha-3.json'))
         .should.have.all.keys('nameToCode', 'codeToName')
     })
   })
+
 })
 
 describe('chain', () => {
+
   describe('makeManageSessions', () => {
     const SESSIONS = makeActiveMap(1) // dependency
     const manageSessions = makeManageSessions(SESSIONS)
@@ -153,26 +192,29 @@ describe('chain', () => {
       session.should.have.all.keys('name', 'last_query', 'last_stamp', 'on')
     })
   })
+
   describe('makeCheckOn', () => {
     const SESSIONS = makeActiveMap(1)
     const checkOn = makeCheckOn(SESSIONS)
     it('should return a function', () => {
       checkOn.should.be.a('function')
     })
-    it('should factor a function that resets e.text when asserting', () => {
+    it('should factor a function that sets e.response on hit', () => {
       SESSIONS.set('xyz', {
         last_stamp: 1504786753609, // .last_stamp must be a timestamp
         on: { yes: { text: 'prepared response' } }
       })
-      checkOn({
+      const checkedOn = checkOn({
         text: 'yes',
         response: {},
         user: { id: 'xyz' },
         on: 'yes'
       }, () => {})
-      SESSIONS.get('xyz').on.should.be.empty
+      checkedOn.response.should.not.be.empty
+      checkedOn.response.text.should.equal('prepared response')
     })
   })
+
   describe('tokenizeText', () => {
     const e = tokenizeText({ text: 'Hi Ho' }, () => {})
     it('should return an object (e)', () => {
@@ -182,23 +224,25 @@ describe('chain', () => {
       e.tokens.should.be.an('array')
     })
   })
+
   describe('rageScorer', () => {
     it('should return a function', () => {
       rageScorer.should.be.a('function')
     })
   })
-  describe('makeCheckAgainstCCDB', () => {
-    const checkAgainstCCDB = makeCheckAgainstCCDB({
+
+  describe('makeCheckAgainstCountryCodeDB', () => {
+    const checkAgainstCountryCodeDB = makeCheckAgainstCountryCodeDB({
       nameToCode: { Germany: 'DEU' },
       codeToName: {}
     })
-    const e = checkAgainstCCDB({
+    const e = checkAgainstCountryCodeDB({
       text: 'country code Germany',
       tokens: [ 'country', 'code', 'Germany' ],
       response: {}
     }, () => {})
     it('should return a function', () => {
-      checkAgainstCCDB.should.be.a('function')
+      checkAgainstCountryCodeDB.should.be.a('function')
     })
     it('should factor a function that sets a object under e.stash', () => {
       e.stash.should.be.an('object')
@@ -211,60 +255,63 @@ describe('chain', () => {
       e.stash.codeToName.should.be.an('object')
     })
   })
-  describe('_flag', () => {
-    const e = _flag({
-      text: 'tell me the price of the iphone 7',
-      stash: {
-        exactProducts: [ 'iphone 7' ],
-        hitProducts: {
-          'iphone 7': {
-            category: 'smartphones',
-            features: [ 'hd-camera', 'siri' ],
-            pictures: [ 'iphront.png', 'iphback.png' ],
-            price: 900,
-            ratings: [ 4, 3, 5, 4, 3, 4, 3, 4, 1, 3 ]
-          }
-        }
-      }
-    },
-    () => {})
-    it('should set boolean flags as e.stash.hitProducts.*.flags.wants*', () => {
-      e.stash.hitProducts['iphone 7'].flags.should.be.an('object')
-      Object.keys(e.stash.hitProducts['iphone 7'].flags).forEach(_flag => {
-        e.stash.hitProducts['iphone 7'].flags[_flag].should.be.a('boolean')
-      })
-    })
-  })
-  describe('_patchProductInfo', () => {
-    const e = _patchProductInfo({
-      text: 'tell me the price of the iphone 7',
-      stash: {
-        exactProducts: [ 'iphone 7' ],
-        hitProducts: {
-          'iphone 7': {
-            category: 'smartphones',
-            features: [ 'hd-camera', 'siri' ],
-            pictures: [ 'iphront.png', 'iphback.png' ],
-            price: 900,
-            ratings: [ 4, 3, 5, 4, 3, 4, 3, 4, 1, 3 ],
-            flags: {
-              features: false,
-              pictures: false,
-              price: true,
-              ratings: false,
-              wantsMinRating: false,
-              wantsMaxRating: false,
-              wantsAvgRating: false
-            }
-          }
-        }
-      }
-    },
-    () => {})
-    it('should add a string under e.stash.hitProducts.*.patch', () => {
-      e.stash.hitProducts['iphone 7'].patch.should.be.a('string')
-    })
-  })
+
+  // describe('_flag', () => {
+  //   const e = _flag({
+  //     text: 'tell me the price of the iphone 7',
+  //     stash: {
+  //       exactProducts: [ 'iphone 7' ],
+  //       hitProducts: {
+  //         'iphone 7': {
+  //           category: 'smartphones',
+  //           features: [ 'hd-camera', 'siri' ],
+  //           pictures: [ 'iphront.png', 'iphback.png' ],
+  //           price: 900,
+  //           ratings: [ 4, 3, 5, 4, 3, 4, 3, 4, 1, 3 ]
+  //         }
+  //       }
+  //     }
+  //   },
+  //   () => {})
+  //   it('should set boolean flags as e.stash.hitProducts.*.flags.wants*', () => {
+  //     e.stash.hitProducts['iphone 7'].flags.should.be.an('object')
+  //     Object.keys(e.stash.hitProducts['iphone 7'].flags).forEach(_flag => {
+  //       e.stash.hitProducts['iphone 7'].flags[_flag].should.be.a('boolean')
+  //     })
+  //   })
+  // })
+  //
+  // describe('_patchProductInfo', () => {
+  //   const e = _patchProductInfo({
+  //     text: 'tell me the price of the iphone 7',
+  //     stash: {
+  //       exactProducts: [ 'iphone 7' ],
+  //       hitProducts: {
+  //         'iphone 7': {
+  //           category: 'smartphones',
+  //           features: [ 'hd-camera', 'siri' ],
+  //           pictures: [ 'iphront.png', 'iphback.png' ],
+  //           price: 900,
+  //           ratings: [ 4, 3, 5, 4, 3, 4, 3, 4, 1, 3 ],
+  //           flags: {
+  //             features: false,
+  //             pictures: false,
+  //             price: true,
+  //             ratings: false,
+  //             wantsMinRating: false,
+  //             wantsMaxRating: false,
+  //             wantsAvgRating: false
+  //           }
+  //         }
+  //       }
+  //     }
+  //   },
+  //   () => {})
+  //   it('should add a string under e.stash.hitProducts.*.patch', () => {
+  //     e.stash.hitProducts['iphone 7'].patch.should.be.a('string')
+  //   })
+  // })
+
   describe('makeChooseResponse', () => {
     const SESSIONS = makeActiveMap(1) // dependency
     const chooseResponse = makeChooseResponse(SESSIONS)
@@ -289,4 +336,5 @@ describe('chain', () => {
       choice.response.links[0].should.have.all.keys('href', 'text')
     })
   })
+
 })

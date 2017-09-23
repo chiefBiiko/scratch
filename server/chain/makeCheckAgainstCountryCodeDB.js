@@ -2,13 +2,13 @@
 
 const matchExAx = require('./../helpers/matchExAx')
 
-module.exports = CCDB => {
+module.exports = CountryCodeDB => {
   // assemble factory return
-  const checkAgainstCCDB = (e, next) => { // closes over CCDB
+  const checkAgainstCountryCodeDB = (e, next) => { // closes over CountryCodeDB
     if (Object.keys(e.response).length) next(null, e)
-    // CCDB subsets
-    const countrynames = Object.keys(CCDB.nameToCode)
-    const countrycodes = Object.keys(CCDB.codeToName)
+    // CountryCodeDB subsets
+    const countrynames = Object.keys(CountryCodeDB.nameToCode)
+    const countrycodes = Object.keys(CountryCodeDB.codeToName)
     // code/name hit arrays
     const namematches = matchExAx(e.text, e.tokens, countrynames, 1)
     const codematches = countrycodes
@@ -16,11 +16,11 @@ module.exports = CCDB => {
     // store country code mappings on e.stash
     e.stash = {
       nameToCode: namematches.reduce((acc, cur) => {
-        acc[cur] = CCDB.nameToCode[cur]
+        acc[cur] = CountryCodeDB.nameToCode[cur]
         return acc
       }, {}),
       codeToName: codematches.reduce((acc, cur) => {
-        acc[cur] = CCDB.codeToName[cur]
+        acc[cur] = CountryCodeDB.codeToName[cur]
         return acc
       }, {})
     }
@@ -28,5 +28,5 @@ module.exports = CCDB => {
     return e // 4 dev tests only
   }
   // returning a closure
-  return checkAgainstCCDB
+  return checkAgainstCountryCodeDB
 }

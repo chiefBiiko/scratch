@@ -6,7 +6,7 @@ module.exports = {
     return {
       text: 'To log in, please use the login details provided by Konica ' +
              'Minolta.\nIf you do not have your login credentials, ' +
-             'please get in touch with customerportal@konicaminolta.eu.',
+             'please get in touch with our customer portal.',
       quickCopies: [ 'customerportal@konicaminolta.eu' ]
     }
   },

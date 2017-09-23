@@ -4,13 +4,12 @@
     <meta charset="utf-8">
     <title>chatbot client</title>
     <script>
-      "use strict"
-      function initChatbotComponent(e,
-                                    serveraddress='ws://127.0.0.1:50000',
-                                    selector='#chatbot-component') {
+      'use strict'
+      function initChatbotComponent(serveraddress='ws://127.0.0.1:50000') {
         const websocket = new WebSocket(serveraddress)
         // DOM elements
-        const component = document.querySelector(selector)
+        const body = document.querySelector('body')
+        const component = document.createElement('div')
         const msgboard = document.createElement('div')
         const stdusr = document.createElement('input')
         // assembling DOM elements
@@ -18,7 +17,6 @@
         component.appendChild(stdusr)
         stdusr.type = 'text'
         stdusr.placeholder = 'chat...'
-        stdusr.focus()
         // DOM elements' styling
         component.style.font = 'normal normal 16px Verdana, sans-serif'
         component.style.height = 'auto'
@@ -35,7 +33,7 @@
         stdusr.style.font = 'inherit'
         stdusr.style.width = '100%'
         // helper factories
-        function makeMsgBox(type, text) { // type 'usr' or 'bot'
+        function makeMessageBox(type, text) { // type 'usr' or 'bot'
           const msgbox = document.createElement('div')
           msgbox.innerText = text
           msgbox.style.backgroundColor = '#007dc5'
@@ -59,6 +57,7 @@
           btn.value = value
           btn.innerText = text
           btn.className = sharedclass
+          btn.style.cursor = 'pointer'
           btn.style.display = 'block'
           btn.style.width = '100%'
           btn.style.marginBottom = '10px'
@@ -68,26 +67,66 @@
               text: '',
               on: e.target.value // aka btn.value
             }))
-            Array.from(document.getElementsByClassName(sharedclass))
-              .forEach(btn => btn.disabled = true)
+            // below can be used to allow only one click among a set of buttons
+            // Array.from(document.getElementsByClassName(sharedclass))
+            //   .forEach(btn => {
+            //     btn.disabled = true
+            //     btn.style.cursor = 'not-allowed'
+            //   })
           }).bind(null, websocket, sharedclass)
           return btn
         }
+        function makeCopyToClipboardButton(text) {
+          const btn = document.createElement('button')
+          const container = document.createElement('div')
+          // btn.innerText = `${text}\nclick to copy`
+          btn.innerHTML = `<strong>${text}</strong>\nclick to copy`
+          btn.style.width = '100%'
+          btn.style.cursor = 'copy'
+          btn.style.marginBottom = '10px'
+          btn.style.font = 'normal normal 12px Verdana, sans-serif'
+          btn.onclick = ((container, btn, text, e) => {
+            const area = document.createElement('textarea')
+            var copySuccess = false
+            area.value = text
+            container.appendChild(area)
+            area.select()
+            try {
+              copySuccess = document.execCommand('copy')
+            } catch(err) {
+              container.removeChild(area)
+              btn.innerHTML =
+                btn.innerHTML.replace('click to copy', 'copying failed')
+            } finally {
+              container.removeChild(area)
+              if (!copySuccess) {
+                btn.innerHTML =
+                  btn.innerHTML.replace('click to copy', 'copying failed')
+              } else {
+                btn.innerHTML =
+                  btn.innerHTML.replace('click to copy', 'copied to clipboard')
+              }
+
+            }
+          }).bind(null, container, btn, text)
+          container.appendChild(btn)
+          return container
+        }
         // event handlers
-        function usrInputHandler(msgboard, stdusr, websocket, e) {
+        function usrInputHandler(stdusr, msgboard, websocket, e) {
           if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
-            msgboard.appendChild(makeMsgBox('usr', stdusr.value))
+            msgboard.appendChild(makeMessageBox('usr', stdusr.value))
             websocket.send(JSON.stringify({
-              text: stdusr.value // , on: null
+              text: stdusr.value
             }))
             stdusr.value = ''
             msgboard.scrollTop = msgboard.scrollHeight
           }
         }
-        function botReplyHandler(websocket, msgboard, e) {
+        function botReplyHandler(msgboard, websocket, e) {
           const pack = JSON.parse(e.data)
           console.log(JSON.stringify(pack))
-          msgboard.appendChild(makeMsgBox('bot', pack.response.text))
+          msgboard.appendChild(makeMessageBox('bot', pack.response.text))
           if (pack.response.hasOwnProperty('links')) {
             pack.response.links.forEach(link => {
               msgboard.appendChild(makeLink(link.href, link.text))
@@ -102,17 +141,23 @@
                                               timestamp)) // as sharedclass
             })
           }
+          if (pack.response.hasOwnProperty('quickCopies')) {
+            pack.response.quickCopies.forEach(quickCopyText => {
+              msgboard.appendChild(makeCopyToClipboardButton(quickCopyText))
+            })
+          }
           msgboard.scrollTop = msgboard.scrollHeight
         }
         // registering event handlers
         component.onclick = () => stdusr.focus()
-        stdusr.onkeyup = usrInputHandler.bind(null, msgboard, stdusr, websocket)
-        websocket.onmessage = botReplyHandler.bind(null, websocket, msgboard)
+        stdusr.onkeyup = usrInputHandler.bind(null, stdusr, msgboard, websocket)
+        websocket.onmessage = botReplyHandler.bind(null, msgboard, websocket)
+        // showtime
+        stdusr.focus()
+        body.appendChild(component)
       }
-      window.onload = initChatbotComponent
+      window.onload = () => initChatbotComponent()
     </script>
   </head>
-  <body>
-    <div id="chatbot-component"></div>
-  </body>
+  <body></body>
 </html>
