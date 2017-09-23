@@ -18,10 +18,13 @@
         stdusr.type = 'text'
         stdusr.placeholder = 'chat...'
         // DOM elements' styling
+        component.style.border = '1px solid #e6e6e6'
         component.style.font = 'normal normal 16px Verdana, sans-serif'
         component.style.height = 'auto'
         component.style.width = '300px'
-        component.style.border = '1px solid #e6e6e6'
+        component.style.position = 'fixed'
+        component.style.bottom = '0'
+        component.style.right = '0'
         msgboard.style.boxSizing = 'border-box'
         msgboard.style.color = '#fff'
         msgboard.style.height = '330px'
@@ -33,14 +36,14 @@
         stdusr.style.font = 'inherit'
         stdusr.style.width = '100%'
         // helper factories
-        function makeMessageBox(type, text) { // type 'usr' or 'bot'
+        function makeMessageBox(align, text) { // align === CSS text-align
           const msgbox = document.createElement('div')
           msgbox.innerText = text
           msgbox.style.backgroundColor = '#007dc5'
           msgbox.style.borderRadius = '2px'
           msgbox.style.marginBottom = '10px'
           msgbox.style.padding = '5px'
-          if (type === 'usr') msgbox.style.textAlign = 'right'
+          msgbox.style.textAlign = align
           return msgbox
         }
         function makeLink(href, text) {
@@ -115,7 +118,7 @@
         // event handlers
         function usrInputHandler(stdusr, msgboard, websocket, e) {
           if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
-            msgboard.appendChild(makeMessageBox('usr', stdusr.value))
+            msgboard.appendChild(makeMessageBox('right', stdusr.value))
             websocket.send(JSON.stringify({
               text: stdusr.value
             }))
@@ -126,7 +129,7 @@
         function botReplyHandler(msgboard, websocket, e) {
           const pack = JSON.parse(e.data)
           console.log(JSON.stringify(pack))
-          msgboard.appendChild(makeMessageBox('bot', pack.response.text))
+          msgboard.appendChild(makeMessageBox('left', pack.response.text))
           if (pack.response.hasOwnProperty('links')) {
             pack.response.links.forEach(link => {
               msgboard.appendChild(makeLink(link.href, link.text))
