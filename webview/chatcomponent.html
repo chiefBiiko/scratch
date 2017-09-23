@@ -14,9 +14,17 @@
         const toggler = document.createElement('span')
         const msgboard = document.createElement('div')
         const stdusr = document.createElement('input')
+        const hidevis = '<svg width="20" height="16">' +
+          '<rect y="6" width="20" height="4" fill="#000"></rect>' +
+          '</svg>'
+        const showvis = '<svg width="20" height="16">' +
+          '<rect y="4" width="20" height="4" fill="#000"></rect>' +
+          '<rect y="10" width="20" height="4" fill="#000"></rect>' +
+          '</svg>'
         // assembling DOM elements
+        headline.innerHTML = '<strong>chatbot</strong>'
         toggler.isComponentOpen = true
-        toggler.innerText = 'hide'
+        toggler.innerHTML = hidevis
         stdusr.type = 'text'
         stdusr.placeholder = 'chat...'
         headline.appendChild(toggler)
@@ -24,9 +32,11 @@
         component.appendChild(msgboard)
         component.appendChild(stdusr)
         // DOM elements' styling
+        headline.style.padding = '5px'
         headline.style.overflow = 'hidden'
         toggler.style.float = 'right'
         toggler.style.cursor = 'pointer'
+        component.style.backgroundColor = '#fff'
         component.style.border = '1px solid #e6e6e6'
         component.style.font = 'normal normal 16px Verdana, sans-serif'
         component.style.height = 'auto'
@@ -34,6 +44,7 @@
         component.style.position = 'fixed'
         component.style.bottom = '0'
         component.style.right = '0'
+        component.style.zIndex = '9999'
         msgboard.style.boxSizing = 'border-box'
         msgboard.style.color = '#fff'
         msgboard.style.height = '330px'
@@ -125,19 +136,19 @@
           return container
         }
         // event handlers
-        function toggleComponent(component) { // this == toggler
-          if (this.isComponentOpen) {
+        function toggleComponent(component, hidevis, showvis) {
+          if (this.isComponentOpen) { // this == toggler
             Array.from(component.children).slice(1).forEach(child => {
               child.style.display = 'none'
             })
             this.isComponentOpen = false
-            this.innerText = 'show'
+            this.innerHTML = showvis
           } else if (!this.isComponentOpen) {
             Array.from(component.children).slice(1).forEach(child => {
               child.style.display = 'block'
             })
             this.isComponentOpen = true
-            this.innerText = 'hide'
+            this.innerHTML = hidevis
           }
         }
         function usrInputHandler(stdusr, msgboard, websocket, e) {
@@ -176,13 +187,14 @@
           msgboard.scrollTop = msgboard.scrollHeight
         }
         // registering event handlers
-        toggler.onclick = toggleComponent.bind(toggler, component)
+        toggler.onclick = toggleComponent.bind(toggler, component, hidevis,
+          showvis)
         component.onclick = () => stdusr.focus()
         stdusr.onkeyup = usrInputHandler.bind(null, stdusr, msgboard, websocket)
         websocket.onmessage = botReplyHandler.bind(null, msgboard, websocket)
         // showtime
-        stdusr.focus()
         body.appendChild(component)
+        stdusr.focus()
       }
       window.onload = () => initChatbotComponent()
     </script>
