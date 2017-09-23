@@ -10,14 +10,23 @@
         // DOM elements
         const body = document.querySelector('body')
         const component = document.createElement('div')
+        const headline = document.createElement('div')
+        const toggler = document.createElement('span')
         const msgboard = document.createElement('div')
         const stdusr = document.createElement('input')
         // assembling DOM elements
-        component.appendChild(msgboard)
-        component.appendChild(stdusr)
+        toggler.isComponentOpen = true
+        toggler.innerText = 'hide'
         stdusr.type = 'text'
         stdusr.placeholder = 'chat...'
+        headline.appendChild(toggler)
+        component.appendChild(headline)
+        component.appendChild(msgboard)
+        component.appendChild(stdusr)
         // DOM elements' styling
+        headline.style.overflow = 'hidden'
+        toggler.style.float = 'right'
+        toggler.style.cursor = 'pointer'
         component.style.border = '1px solid #e6e6e6'
         component.style.font = 'normal normal 16px Verdana, sans-serif'
         component.style.height = 'auto'
@@ -116,6 +125,21 @@
           return container
         }
         // event handlers
+        function toggleComponent(component) { // this == toggler
+          if (this.isComponentOpen) {
+            Array.from(component.children).slice(1).forEach(child => {
+              child.style.display = 'none'
+            })
+            this.isComponentOpen = false
+            this.innerText = 'show'
+          } else if (!this.isComponentOpen) {
+            Array.from(component.children).slice(1).forEach(child => {
+              child.style.display = 'block'
+            })
+            this.isComponentOpen = true
+            this.innerText = 'hide'
+          }
+        }
         function usrInputHandler(stdusr, msgboard, websocket, e) {
           if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
             msgboard.appendChild(makeMessageBox('right', stdusr.value))
@@ -152,6 +176,7 @@
           msgboard.scrollTop = msgboard.scrollHeight
         }
         // registering event handlers
+        toggler.onclick = toggleComponent.bind(toggler, component)
         component.onclick = () => stdusr.focus()
         stdusr.onkeyup = usrInputHandler.bind(null, stdusr, msgboard, websocket)
         websocket.onmessage = botReplyHandler.bind(null, msgboard, websocket)
