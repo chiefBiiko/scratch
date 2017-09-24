@@ -73,8 +73,7 @@
         function makeMessageBox(align, text) { // align === CSS text-align
           const msgbox = document.createElement('div')
           msgbox.innerText = text
-          // msgbox.style.backgroundColor = '#007dc5'
-          msgbox.style.border = '1px solid #007dc5'
+          msgbox.style.backgroundColor = '#e6e6e6'
           msgbox.style.borderRadius = '2px'
           msgbox.style.color = '#000'
           msgbox.style.marginBottom = '10px'
@@ -108,7 +107,7 @@
           btn.onmousedown = btn.onmouseenter =
             btn.onmouseup = btn.onmouseleave = function(e) {
             this.style.backgroundColor = // this === btn
-              ['mousedown', 'mouseenter'].includes(e.type) ?
+              [ 'mousedown', 'mouseenter' ].includes(e.type) ?
                 '#0071b3' : '#007dc5'
           }
           btn.onclick = ((websocket, sharedclass, e) => {
@@ -227,7 +226,7 @@
         stdbtn.onmousedown = stdbtn.onmouseenter =
           stdbtn.onmouseup = stdbtn.onmouseleave = function(e) {
           this.style.backgroundColor = // this === stdbtn
-            ['mousedown', 'mouseenter'].includes(e.type) ? '#0071b3' : '#007dc5'
+            [ 'mousedown', 'mouseenter' ].includes(e.type) ? '#0071b3' : '#007dc5'
         }
         stdusr.onkeyup = stdbtn.onclick =
           usrInputHandler.bind(null, stdusr, msgboard, websocket)
@@ -235,6 +234,7 @@
         // showtime
         body.appendChild(component)
         stdusr.focus()
+        return component
       }
       window.onload = () => initChatbotComponent()
     </script>
