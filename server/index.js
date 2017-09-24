@@ -27,7 +27,7 @@ const wsserver = new WebSocket.Server({
 
 // chain function factories
 const makeManageSessions = require('./chain/makeManageSessions')
-const makeCheckOn = require('./chain/makeCheckOn')
+const makeCheckOnTriggers = require('./chain/makeCheckOnTriggers')
 const makeCheckAgainstCountryCodeDB =
   require('./chain/makeCheckAgainstCountryCodeDB')
 const makeChooseResponse = require('./chain/makeChooseResponse')
@@ -40,7 +40,7 @@ var CountryCodeDB = makeCountryCodeDB(path.join(__dirname,
 
 // chain functions
 const manageSessions = makeManageSessions(SESSIONS)
-const checkOn = makeCheckOn(SESSIONS)
+const checkOnTriggers = makeCheckOnTriggers(SESSIONS)
 const rageScorer = require('./chain/rageScorer')
 const tokenizeText = require('./chain/tokenizeText')
 const checkAgainstCountryCodeDB =
@@ -50,7 +50,7 @@ const devlog = require('./chain/devlog')
 
 // websocketclient handlers
 function websocketMessageHandler(manageSessions,
-                                 checkOn,
+                                 checkOnTriggers,
                                  checkAgainstCountryCodeDB,
                                  chooseResponse,
                                  pack) {
@@ -64,7 +64,7 @@ function websocketMessageHandler(manageSessions,
   chain([
     next => next(null, e),
     manageSessions,
-    checkOn,
+    checkOnTriggers,
     rageScorer,
     tokenizeText,
     checkAgainstCountryCodeDB, // _flag, _patchProductInfo,
@@ -87,12 +87,12 @@ const websocketErrorHandler = err => {
 }
 
 // websocketserver handlers
-function wssConnectionHandler (manageSessions, checkOn,
+function wssConnectionHandler (manageSessions, checkOnTriggers,
                                checkAgainstCountryCodeDB, chooseResponse,
                                websocket/*, httpreq */) {
   websocket.id = Math.random().toString()
   websocket.on('message', websocketMessageHandler.bind(websocket, // thisArg
-    manageSessions, checkOn, checkAgainstCountryCodeDB, chooseResponse)) // chain funcs
+    manageSessions, checkOnTriggers, checkAgainstCountryCodeDB, chooseResponse)) // chain funcs
   websocket.on('close', websocketCloseHandler)
   websocket.on('error', websocketErrorHandler)
   console.log(`[new connection: ${websocket.id}]`)
@@ -104,6 +104,6 @@ const wssErrorHandler = err => console.error(`[wsserver error: ${err}]`)
 
 // registering websocketserver handlers
 wsserver.on('connection', wssConnectionHandler.bind(wsserver, // thisArg
-  manageSessions, checkOn, checkAgainstCountryCodeDB, chooseResponse))
+  manageSessions, checkOnTriggers, checkAgainstCountryCodeDB, chooseResponse))
 wsserver.on('listening', wssInitHandler)
 wsserver.on('error', wssErrorHandler)

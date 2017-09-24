@@ -2,7 +2,7 @@
 
 const randomArrPick = require('./randomArrPick')
 
-module.exports = {
+module.exports = Object.freeze({
   // generic content
   welcome: name => {
     return {
@@ -52,4 +52,4 @@ module.exports = {
       text: `${code} stands for ${name}`
     }
   }
-}
+})

@@ -1,6 +1,6 @@
 'use strict'
 
-module.exports = {
+module.exports = Object.freeze({
   // FAQ content
   login: () => { // make email address copyable to clipboard by click!
     return {
@@ -43,4 +43,4 @@ module.exports = {
       }]
     }
   }
-}
+})

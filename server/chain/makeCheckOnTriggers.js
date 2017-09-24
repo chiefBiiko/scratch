@@ -1,7 +1,7 @@
 'use strict'
 
 module.exports = SESSIONS => {
-  const checkOn = (e, next) => {
+  const checkOnTriggers = (e, next) => {
     if (Object.keys(e.response).length) next(null, e)
     const session = SESSIONS.get(e.user.id)
     if (e.on.length) {
@@ -14,5 +14,5 @@ module.exports = SESSIONS => {
     return e // 4 dev tests only
   }
   // returning a closure
-  return checkOn
+  return checkOnTriggers
 }

@@ -13,13 +13,13 @@ const fmtFAQ = require('./../helpers/fmtFAQ')
 const andFmtArr = require('./../helpers/andFmtArr')
 const toTitleCase = require('./../helpers/toTitleCase')
 const checkForUserName = require('./../helpers/checkForUserName')
-const replaceOrFalsy = require('./../helpers/replaceOrFalsy')
+const replaceOrFalsey = require('./../helpers/replaceOrFalsey')
 const matchExAx = require('./../helpers/matchExAx')
 const makeActiveMap = require('./../helpers/makeActiveMap')
 const makeCountryCodeDB = require('./../helpers/makeCountryCodeDB')
 
 const makeManageSessions = require('./../chain/makeManageSessions')
-const makeCheckOn = require('./../chain/makeCheckOn')
+const makeCheckOnTriggers = require('./../chain/makeCheckOnTriggers')
 const rageScorer = require('./../chain/rageScorer')
 const tokenizeText = require('./../chain/tokenizeText')
 const makeCheckAgainstCountryCodeDB =
@@ -129,12 +129,12 @@ describe('helpers', () => {
     })
   })
 
-  describe('replaceOrFalsy', () => {
+  describe('replaceOrFalsey', () => {
     it('should return a string in case of a replacement', () => {
-      replaceOrFalsy('abc', /[ci]/, 'z').should.equal('abz')
+      replaceOrFalsey('abc', /[ci]/, 'z').should.equal('abz')
     })
     it('should return an empty string in case of no replacement', () => {
-      replaceOrFalsy('abc', 'y', 'z').should.equal('')
+      replaceOrFalsey('abc', 'y', 'z').should.equal('')
     })
   })
 
@@ -193,18 +193,18 @@ describe('chain', () => {
     })
   })
 
-  describe('makeCheckOn', () => {
+  describe('makeCheckOnTriggers', () => {
     const SESSIONS = makeActiveMap(1)
-    const checkOn = makeCheckOn(SESSIONS)
+    const checkOnTriggers = makeCheckOnTriggers(SESSIONS)
     it('should return a function', () => {
-      checkOn.should.be.a('function')
+      checkOnTriggers.should.be.a('function')
     })
     it('should factor a function that sets e.response on hit', () => {
       SESSIONS.set('xyz', {
         last_stamp: 1504786753609, // .last_stamp must be a timestamp
         on: { yes: { text: 'prepared response' } }
       })
-      const checkedOn = checkOn({
+      const checkedOn = checkOnTriggers({
         text: 'yes',
         response: {},
         user: { id: 'xyz' },

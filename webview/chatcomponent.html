@@ -14,8 +14,9 @@
         const toggler = document.createElement('span')
         const msgboard = document.createElement('div')
         const stdusr = document.createElement('input')
+        const stdbtn = document.createElement('span')
         const hidevis = '<svg width="20" height="16">' +
-          '<rect y="6" width="20" height="4" fill="#000"></rect>' +
+          '<rect x="2" y="6" width="16" height="4" fill="#000"></rect>' +
           '</svg>'
         const showvis = '<svg width="20" height="16">' +
           '<rect x="4" y="4" width="4" height="4" fill="#000"></rect>' +
@@ -28,14 +29,16 @@
         toggler.innerHTML = hidevis
         stdusr.type = 'text'
         stdusr.placeholder = 'chat...'
+        stdbtn.innerText = 'Send'
         headline.appendChild(toggler)
         component.appendChild(headline)
         component.appendChild(msgboard)
+        component.appendChild(stdbtn)
         component.appendChild(stdusr)
         // DOM elements' styling
         headline.style.padding = '5px'
-        headline.style.overflow = 'hidden'
-        toggler.style.float = 'right'
+        toggler.style.position = 'fixed'
+        toggler.style.right = '5px'
         toggler.style.cursor = 'pointer'
         component.style.backgroundColor = '#fff'
         component.style.border = '1px solid #e6e6e6'
@@ -43,49 +46,71 @@
         component.style.height = 'auto'
         component.style.width = '300px'
         component.style.position = 'fixed'
-        component.style.bottom = '0'
-        component.style.right = '0'
+        component.style.bottom = component.style.right = '0'
         component.style.zIndex = '9999'
         msgboard.style.boxSizing = 'border-box'
-        msgboard.style.color = '#fff'
         msgboard.style.height = '330px'
+        msgboard.style.marginBottom = '1px'
         msgboard.style.width = 'inherit'
         msgboard.style.wordWrap = 'break-word'
         msgboard.style.overflowY = 'scroll'
         msgboard.style.padding = '5px'
-        stdusr.style.boxSizing = 'border-box'
-        stdusr.style.font = 'inherit'
-        stdusr.style.width = '100%'
+        stdusr.style.boxSizing = stdbtn.style.boxSizing = 'border-box'
+        stdusr.style.font = stdbtn.style.font =
+          'normal normal 14px Verdana, sans-serif'
+        stdusr.style.padding = '0 5px 0 5px'
+        stdusr.style.width = '218px'
+        stdbtn.style.backgroundColor = '#007dc5'
+        stdbtn.style.color = '#fff'
+        stdbtn.style.cursor = 'pointer'
+        stdbtn.style.position = 'fixed'
+        stdbtn.style.bottom = stdbtn.style.right = '1px'
+        stdbtn.style.textAlign = 'center'
+        stdusr.style.height = stdbtn.style.height = stdbtn.style.lineHeight =
+          '25px'
+        stdbtn.style.width = '80px'
         // helper factories
         function makeMessageBox(align, text) { // align === CSS text-align
           const msgbox = document.createElement('div')
           msgbox.innerText = text
-          msgbox.style.backgroundColor = '#007dc5'
+          // msgbox.style.backgroundColor = '#007dc5'
+          msgbox.style.border = '1px solid #007dc5'
           msgbox.style.borderRadius = '2px'
+          msgbox.style.color = '#000'
           msgbox.style.marginBottom = '10px'
           msgbox.style.padding = '5px'
           msgbox.style.textAlign = align
           return msgbox
         }
         function makeLink(href, text) {
+          const linkwrapper = document.createElement('div')
           const link = document.createElement('a')
+          linkwrapper.appendChild(link)
           link.href = href
           link.textContent = text
           link.target = '_blank'
-          link.style.display = 'inline-block'
-          link.style.marginBottom = '10px'
-          return link
+          linkwrapper.style.marginBottom = '10px'
+          linkwrapper.style.textAlign = 'center'
+          return linkwrapper
         }
         function makeButton(websocket, value, text, sharedclass) {
-          const btn = document.createElement('button')
+          const btn = document.createElement('div')
           btn.value = value
           btn.innerText = text
           btn.className = sharedclass
+          btn.style.backgroundColor = '#007dc5'
+          btn.style.color = '#fff'
           btn.style.cursor = 'pointer'
-          btn.style.display = 'block'
-          btn.style.width = '100%'
+          btn.style.font = 'normal bold 16px Verdana, sans-serif'
           btn.style.marginBottom = '10px'
-          btn.style.font = 'normal normal 16px Verdana, sans-serif'
+          btn.style.padding = '5px'
+          btn.style.textAlign = 'center'
+          btn.onmousedown = btn.onmouseenter =
+            btn.onmouseup = btn.onmouseleave = function(e) {
+            this.style.backgroundColor = // this === btn
+              ['mousedown', 'mouseenter'].includes(e.type) ?
+                '#0071b3' : '#007dc5'
+          }
           btn.onclick = ((websocket, sharedclass, e) => {
             websocket.send(JSON.stringify({
               text: '',
@@ -101,14 +126,22 @@
           return btn
         }
         function makeCopyToClipboardButton(text) {
-          const btn = document.createElement('button')
+          const btn = document.createElement('div')
           const container = document.createElement('div')
-          // btn.innerText = `${text}\nclick to copy`
-          btn.innerHTML = `<strong>${text}</strong>\nclick to copy`
-          btn.style.width = '100%'
+          btn.innerHTML = `<strong>${text}</strong><br>click to copy`
+          btn.style.backgroundColor = '#007dc5'
+          btn.style.color = '#fff'
           btn.style.cursor = 'copy'
-          btn.style.marginBottom = '10px'
           btn.style.font = 'normal normal 12px Verdana, sans-serif'
+          btn.style.marginBottom = '10px'
+          btn.style.padding = '5px'
+          btn.style.textAlign = 'center'
+          btn.onmousedown = btn.onmouseenter =
+            btn.onmouseup = btn.onmouseleave = function(e) {
+            this.style.backgroundColor = // this === btn
+              ['mousedown', 'mouseenter'].includes(e.type) ?
+                '#0071b3' : '#007dc5'
+          }
           btn.onclick = ((container, btn, text, e) => {
             const area = document.createElement('textarea')
             var copySuccess = false
@@ -153,7 +186,8 @@
           }
         }
         function usrInputHandler(stdusr, msgboard, websocket, e) {
-          if (e.keyCode === 13 && !/^\s*$/.test(stdusr.value)) {
+          if ((e.keyCode === 13 || e.type === 'click') &&
+              !/^\s*$/.test(stdusr.value)) {
             msgboard.appendChild(makeMessageBox('right', stdusr.value))
             websocket.send(JSON.stringify({
               text: stdusr.value
@@ -164,7 +198,6 @@
         }
         function botReplyHandler(msgboard, websocket, e) {
           const pack = JSON.parse(e.data)
-          console.log(JSON.stringify(pack))
           msgboard.appendChild(makeMessageBox('left', pack.response.text))
           if (pack.response.hasOwnProperty('links')) {
             pack.response.links.forEach(link => {
@@ -191,7 +224,13 @@
         toggler.onclick = toggleComponent.bind(toggler, component, hidevis,
           showvis)
         component.onclick = () => stdusr.focus()
-        stdusr.onkeyup = usrInputHandler.bind(null, stdusr, msgboard, websocket)
+        stdbtn.onmousedown = stdbtn.onmouseenter =
+          stdbtn.onmouseup = stdbtn.onmouseleave = function(e) {
+          this.style.backgroundColor = // this === stdbtn
+            ['mousedown', 'mouseenter'].includes(e.type) ? '#0071b3' : '#007dc5'
+        }
+        stdusr.onkeyup = stdbtn.onclick =
+          usrInputHandler.bind(null, stdusr, msgboard, websocket)
         websocket.onmessage = botReplyHandler.bind(null, msgboard, websocket)
         // showtime
         body.appendChild(component)
