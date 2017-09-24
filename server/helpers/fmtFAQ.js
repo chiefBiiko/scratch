@@ -42,5 +42,11 @@ module.exports = Object.freeze({
         text: 'Security Whitepaper'
       }]
     }
+  },
+  whoIsMyBRM: name => {
+    return {
+      text: `Your business relationship manager is ${name ||
+        'not among the managers I know'}.`
+    }
   }
 })

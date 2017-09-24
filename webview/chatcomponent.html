@@ -5,6 +5,7 @@
     <title>chatbot client</title>
     <script>
       'use strict'
+      // TODO parse document.cookies and send e.sid with every message!!! TODO
       function initChatbotComponent(serveraddress='ws://127.0.0.1:50000') {
         const websocket = new WebSocket(serveraddress)
         // DOM elements
@@ -138,7 +139,7 @@
           btn.onmousedown = btn.onmouseenter =
             btn.onmouseup = btn.onmouseleave = function(e) {
             this.style.backgroundColor = // this === btn
-              ['mousedown', 'mouseenter'].includes(e.type) ?
+              [ 'mousedown', 'mouseenter' ].includes(e.type) ?
                 '#0071b3' : '#007dc5'
           }
           btn.onclick = ((container, btn, text, e) => {
@@ -226,7 +227,8 @@
         stdbtn.onmousedown = stdbtn.onmouseenter =
           stdbtn.onmouseup = stdbtn.onmouseleave = function(e) {
           this.style.backgroundColor = // this === stdbtn
-            [ 'mousedown', 'mouseenter' ].includes(e.type) ? '#0071b3' : '#007dc5'
+            [ 'mousedown', 'mouseenter' ].includes(e.type) ?
+              '#0071b3' : '#007dc5'
         }
         stdusr.onkeyup = stdbtn.onclick =
           usrInputHandler.bind(null, stdusr, msgboard, websocket)

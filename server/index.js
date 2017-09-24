@@ -28,19 +28,25 @@ const wsserver = new WebSocket.Server({
 // chain function factories
 const makeManageSessions = require('./chain/makeManageSessions')
 const makeCheckOnTriggers = require('./chain/makeCheckOnTriggers')
+const makeCheckRequestsBRM = require('./chain/makeCheckRequestsBRM')
 const makeCheckAgainstCountryCodeDB =
   require('./chain/makeCheckAgainstCountryCodeDB')
 const makeChooseResponse = require('./chain/makeChooseResponse')
 
 // app-specific globals
 const SESSIONS = makeActiveMap(10)
-var CountryCodeDB = makeCountryCodeDB(path.join(__dirname,
+var CountryCodeDB = makeCountryCodeDB(path.join(__dirname, // gets updated yet
                                                 'data',
                                                 'ISO_3166-1_alpha-3.json'))
+// this one's not updated yet
+const BRM_DB = fs.readFileSync(path.join(__dirname, '..', 'server', 'data',
+                                         'BRM.json'),
+                               'utf8')
 
 // chain functions
 const manageSessions = makeManageSessions(SESSIONS)
 const checkOnTriggers = makeCheckOnTriggers(SESSIONS)
+const checkRequestsBRM = makeCheckRequestsBRM(BRM_DB)
 const rageScorer = require('./chain/rageScorer')
 const tokenizeText = require('./chain/tokenizeText')
 const checkAgainstCountryCodeDB =
@@ -49,18 +55,14 @@ const chooseResponse = makeChooseResponse(SESSIONS)
 const devlog = require('./chain/devlog')
 
 // websocketclient handlers
-function websocketMessageHandler(manageSessions,
-                                 checkOnTriggers,
-                                 checkAgainstCountryCodeDB,
-                                 chooseResponse,
-                                 pack) {
+function websocketMessageHandler(pack) {
   var callbackcount = 0
   const e = JSON.parse(pack) // e has .text already, and might have .on
   e.user     = { id: this.id }
   e.tokens   = []
   e.stash    = {}
   e.response = {}
-  if (!e.hasOwnProperty('on') || !isString(e.on)) e.on = '' // TODO make sure e.on is a string if existing
+  if (!e.hasOwnProperty('on') || !isString(e.on)) e.on = ''
   chain([
     next => next(null, e),
     manageSessions,
@@ -87,23 +89,19 @@ const websocketErrorHandler = err => {
 }
 
 // websocketserver handlers
-function wssConnectionHandler (manageSessions, checkOnTriggers,
-                               checkAgainstCountryCodeDB, chooseResponse,
-                               websocket/*, httpreq */) {
+function wssConnectionHandler (websocket/*, httpreq */) {
   websocket.id = Math.random().toString()
-  websocket.on('message', websocketMessageHandler.bind(websocket, // thisArg
-    manageSessions, checkOnTriggers, checkAgainstCountryCodeDB, chooseResponse)) // chain funcs
+  websocket.on('message', websocketMessageHandler)
   websocket.on('close', websocketCloseHandler)
   websocket.on('error', websocketErrorHandler)
   console.log(`[new connection: ${websocket.id}]`)
 }
-const wssInitHandler = (port => {
+const wssInitHandler = () => {
   console.log(`[wsserver listening on port ${port}]`)
-}).bind(null, port)
+}
 const wssErrorHandler = err => console.error(`[wsserver error: ${err}]`)
 
 // registering websocketserver handlers
-wsserver.on('connection', wssConnectionHandler.bind(wsserver, // thisArg
-  manageSessions, checkOnTriggers, checkAgainstCountryCodeDB, chooseResponse))
+wsserver.on('connection', wssConnectionHandler)
 wsserver.on('listening', wssInitHandler)
 wsserver.on('error', wssErrorHandler)
