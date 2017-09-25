@@ -2,9 +2,10 @@
 
 ## small
 
++ make the botface smile
 + react to a few emojis
 + know a little everyday chit chat
-+ make chatbot component resizable
++ make chatbot component height adjustable for user
 
 ## big
 
