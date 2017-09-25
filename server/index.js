@@ -9,6 +9,8 @@ const chain = require('run-waterfall')
 // some small helpers
 const isString = require('./helpers/isString')
 const makeActiveMap = require('./helpers/makeActiveMap')
+const makeBusinessRelationshipManagerDB =
+  require('./helpers/makeBusinessRelationshipManagerDB')
 const makeCountryCodeDB = require('./helpers/makeCountryCodeDB')
 const parsePortOrNull = require('./helpers/parsePortOrNull')
 
@@ -28,25 +30,24 @@ const wsserver = new WebSocket.Server({
 // chain function factories
 const makeManageSessions = require('./chain/makeManageSessions')
 const makeCheckOnTriggers = require('./chain/makeCheckOnTriggers')
-const makeCheckRequestsBRM = require('./chain/makeCheckRequestsBRM')
+const makeCheckAgainstBusinessRelationshipManagerDB =
+  require('./chain/makeCheckAgainstBusinessRelationshipManagerDB')
 const makeCheckAgainstCountryCodeDB =
   require('./chain/makeCheckAgainstCountryCodeDB')
 const makeChooseResponse = require('./chain/makeChooseResponse')
 
 // app-specific globals
 const SESSIONS = makeActiveMap(10)
-var CountryCodeDB = makeCountryCodeDB(path.join(__dirname, // gets updated yet
-                                                'data',
-                                                'ISO_3166-1_alpha-3.json'))
-// this one's not updated yet
-const BRM_DB = fs.readFileSync(path.join(__dirname, '..', 'server', 'data',
-                                         'BRM.json'),
-                               'utf8')
+const BusinessRelationshipManagerDB = // this one's not updated yet
+  makeBusinessRelationshipManagerDB(path.join(__dirname, 'data', 'BRM.json'))
+var CountryCodeDB = // gets updated yet...
+  makeCountryCodeDB(path.join(__dirname, 'data', 'ISO_3166-1_alpha-3.json'))
 
 // chain functions
 const manageSessions = makeManageSessions(SESSIONS)
 const checkOnTriggers = makeCheckOnTriggers(SESSIONS)
-const checkRequestsBRM = makeCheckRequestsBRM(BRM_DB)
+const checkAgainstBusinessRelationshipManagerDB =
+  makeCheckAgainstBusinessRelationshipManagerDB(BusinessRelationshipManagerDB)
 const rageScorer = require('./chain/rageScorer')
 const tokenizeText = require('./chain/tokenizeText')
 const checkAgainstCountryCodeDB =
@@ -67,6 +68,7 @@ function websocketMessageHandler(pack) {
     next => next(null, e),
     manageSessions,
     checkOnTriggers,
+    checkAgainstBusinessRelationshipManagerDB,
     rageScorer,
     tokenizeText,
     checkAgainstCountryCodeDB, // _flag, _patchProductInfo,
