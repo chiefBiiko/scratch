@@ -43,7 +43,7 @@
         toggler.style.cursor = 'pointer'
         component.style.backgroundColor = '#fff'
         component.style.border = '1px solid #e6e6e6'
-        component.style.font = 'normal normal 16px Verdana, sans-serif'
+        component.style.font = 'normal normal 14px Verdana, sans-serif'
         component.style.height = 'auto'
         component.style.width = '300px'
         component.style.position = 'fixed'
@@ -70,6 +70,17 @@
         stdusr.style.height = stdbtn.style.height = stdbtn.style.lineHeight =
           '25px'
         stdbtn.style.width = '80px'
+        // ordinary helper
+        function parseCookies(cookies) { // cookies == window.document.cookies
+          const list = {}
+          if (typeof(cookies) === 'string' || cookies instanceof String) {
+            cookies.split(';').forEach(cookie => {
+              const parts = cookie.split('=')
+              list[parts.shift().trim()] = decodeURI(parts.join('='))
+            })
+          }
+          return list
+        }
         // helper factories
         function makeMessageBox(align, text) { // align === CSS text-align
           const msgbox = document.createElement('div')
@@ -93,7 +104,7 @@
           linkwrapper.style.textAlign = 'center'
           return linkwrapper
         }
-        function makeButton(websocket, value, text, sharedclass) {
+        function makeButton(value, text, sharedclass) {
           const btn = document.createElement('div')
           btn.value = value
           btn.innerText = text
@@ -111,10 +122,11 @@
               [ 'mousedown', 'mouseenter' ].includes(e.type) ?
                 '#0071b3' : '#007dc5'
           }
-          btn.onclick = ((websocket, sharedclass, e) => {
+          btn.onclick = function(e) {
             websocket.send(JSON.stringify({
+              sid: parseCookies(document.cookies)['GMA_ID'] || '419',
               text: '',
-              on: e.target.value // aka btn.value
+              on: this.value // aka btn.value
             }))
             // below can be used to allow only one click among a set of buttons
             // Array.from(document.getElementsByClassName(sharedclass))
@@ -122,7 +134,7 @@
             //     btn.disabled = true
             //     btn.style.cursor = 'not-allowed'
             //   })
-          }).bind(null, websocket, sharedclass)
+          }
           return btn
         }
         function makeCopyToClipboardButton(text) {
@@ -142,7 +154,7 @@
               [ 'mousedown', 'mouseenter' ].includes(e.type) ?
                 '#0071b3' : '#007dc5'
           }
-          btn.onclick = ((container, btn, text, e) => {
+          btn.onclick = function(e) {
             const area = document.createElement('textarea')
             var copySuccess = false
             area.value = text
@@ -152,25 +164,19 @@
               copySuccess = document.execCommand('copy')
             } catch(err) {
               container.removeChild(area)
-              btn.innerHTML =
-                btn.innerHTML.replace('click to copy', 'copying failed')
+              this.innerHTML = // this === btn
+                this.innerHTML.replace('click to copy', 'copying failed')
             } finally {
               container.removeChild(area)
-              if (!copySuccess) {
-                btn.innerHTML =
-                  btn.innerHTML.replace('click to copy', 'copying failed')
-              } else {
-                btn.innerHTML =
-                  btn.innerHTML.replace('click to copy', 'copied to clipboard')
-              }
-
+              this.innerHTML = this.innerHTML.replace('click to copy',
+                copySuccess ? 'copied to clipboard' : 'copying failed')
             }
-          }).bind(null, container, btn, text)
+          }
           container.appendChild(btn)
           return container
         }
         // event handlers
-        function toggleComponent(component, hidevis, showvis) {
+        function toggleComponent() {
           if (this.isComponentOpen) { // this == toggler
             Array.from(component.children).slice(1).forEach(child => {
               child.style.display = 'none'
@@ -185,18 +191,19 @@
             this.innerHTML = hidevis
           }
         }
-        function usrInputHandler(stdusr, msgboard, websocket, e) {
+        function usrInputHandler(e) {
           if ((e.keyCode === 13 || e.type === 'click') &&
               !/^\s*$/.test(stdusr.value)) {
             msgboard.appendChild(makeMessageBox('right', stdusr.value))
             websocket.send(JSON.stringify({
+              sid: parseCookies(document.cookies)['GMA_ID'] || '419',
               text: stdusr.value
             }))
             stdusr.value = ''
             msgboard.scrollTop = msgboard.scrollHeight
           }
         }
-        function botReplyHandler(msgboard, websocket, e) {
+        function botReplyHandler(e) {
           const pack = JSON.parse(e.data)
           msgboard.appendChild(makeMessageBox('left', pack.response.text))
           if (pack.response.hasOwnProperty('links')) {
@@ -207,8 +214,7 @@
           if (pack.response.hasOwnProperty('buttons')) {
             const timestamp = new Date().getTime()
             pack.response.buttons.forEach(btn => {
-              msgboard.appendChild(makeButton(websocket,
-                                              btn.value,
+              msgboard.appendChild(makeButton(btn.value,
                                               btn.text,
                                               timestamp)) // as sharedclass
             })
@@ -221,8 +227,7 @@
           msgboard.scrollTop = msgboard.scrollHeight
         }
         // registering event handlers
-        toggler.onclick = toggleComponent.bind(toggler, component, hidevis,
-          showvis)
+        toggler.onclick = toggleComponent
         component.onclick = () => stdusr.focus()
         stdbtn.onmousedown = stdbtn.onmouseenter =
           stdbtn.onmouseup = stdbtn.onmouseleave = function(e) {
@@ -230,9 +235,8 @@
             [ 'mousedown', 'mouseenter' ].includes(e.type) ?
               '#0071b3' : '#007dc5'
         }
-        stdusr.onkeyup = stdbtn.onclick =
-          usrInputHandler.bind(null, stdusr, msgboard, websocket)
-        websocket.onmessage = botReplyHandler.bind(null, msgboard, websocket)
+        stdusr.onkeyup = stdbtn.onclick = usrInputHandler
+        websocket.onmessage = botReplyHandler
         // showtime
         body.appendChild(component)
         stdusr.focus()
