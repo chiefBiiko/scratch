@@ -16,10 +16,14 @@ const checkForUserName = require('./../helpers/checkForUserName')
 const replaceOrFalsey = require('./../helpers/replaceOrFalsey')
 const matchExAx = require('./../helpers/matchExAx')
 const makeActiveMap = require('./../helpers/makeActiveMap')
+const makeBusinessRelationshipManagerDB =
+  require('./../helpers/makeBusinessRelationshipManagerDB')
 const makeCountryCodeDB = require('./../helpers/makeCountryCodeDB')
 
 const makeManageSessions = require('./../chain/makeManageSessions')
 const makeCheckOnTriggers = require('./../chain/makeCheckOnTriggers')
+const makeCheckAgainstBusinessRelationshipManagerDB =
+  require('./../chain/makeCheckAgainstBusinessRelationshipManagerDB')
 const rageScorer = require('./../chain/rageScorer')
 const tokenizeText = require('./../chain/tokenizeText')
 const makeCheckAgainstCountryCodeDB =
@@ -158,6 +162,22 @@ describe('helpers', () => {
     }).timeout(1000 * 63) // test timeout
   })
 
+  describe('makeBusinessRelationshipManagerDB', () => {
+    const BusinessRelationshipManagerDB = makeBusinessRelationshipManagerDB(
+      path.join(__dirname, '..', 'data', 'BRM.json')
+    )
+    it('should return an object', () => {
+      BusinessRelationshipManagerDB.should.be.an('object')
+    })
+    it('should return an object with string properties', () => {
+      for (const key in BusinessRelationshipManagerDB) {
+        if (BusinessRelationshipManagerDB.hasOwnProperty(key)) {
+          BusinessRelationshipManagerDB[key].should.be.a('string')
+        }
+      }
+    })
+  })
+
   describe('makeCountryCodeDB', () => {
     it('should return an object', () => {
       makeCountryCodeDB(path.join(__dirname,
@@ -212,6 +232,28 @@ describe('chain', () => {
       }, () => {})
       checkedOn.response.should.not.be.empty
       checkedOn.response.text.should.equal('prepared response')
+    })
+  })
+
+  describe('makeCheckAgainstBusinessRelationshipManagerDB', () => {
+    const BusinessRelationshipManagerDB = makeBusinessRelationshipManagerDB(
+      path.join(__dirname, '..', 'data', 'BRM.json') // dependency
+    )
+    const checkAgainstBusinessRelationshipManagerDB =
+      makeCheckAgainstBusinessRelationshipManagerDB(
+        BusinessRelationshipManagerDB
+      )
+    it('should return a function', () => {
+      checkAgainstBusinessRelationshipManagerDB.should.be.a('function')
+    })
+    it('should return a function that can provide BRM name', () => {
+      const e = checkAgainstBusinessRelationshipManagerDB({
+        sid: '419',
+        text: 'who is my contact?',
+        response: {}
+      }, () => {})
+      e.response.text.startsWith('Your business relationship manager is')
+        .should.be.true
     })
   })
 
