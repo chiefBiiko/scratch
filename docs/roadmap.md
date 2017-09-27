@@ -2,6 +2,7 @@
 
 ## small
 
++ add casual country names to country code json file
 + make the botface smile
 + react to a few emojis
 + know a little everyday chit chat
