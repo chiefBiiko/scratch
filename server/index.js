@@ -58,12 +58,13 @@ const devlog = require('./chain/devlog')
 // websocketclient handlers
 function websocketMessageHandler(pack) {
   var callbackcount = 0
-  const e = JSON.parse(pack) // e has .text already, and might have .on
-  e.user     = { id: this.id }
+  const e = JSON.parse(pack) // e has .gma_id, .text already, and might have .on
+  if (!isString(e.on)) e.on = ''
+  if (!isString(e.gma_id)) e.gma_id = '419'
+  e.user     = { id: this.id } // this === websocket
   e.tokens   = []
   e.stash    = {}
   e.response = {}
-  if (!e.hasOwnProperty('on') || !isString(e.on)) e.on = ''
   chain([
     next => next(null, e),
     manageSessions,
@@ -92,7 +93,7 @@ const websocketErrorHandler = err => {
 
 // websocketserver handlers
 function wssConnectionHandler (websocket/*, httpreq */) {
-  websocket.id = Math.random().toString()
+  websocket.id = Math.random().toString() // websocket identifier
   websocket.on('message', websocketMessageHandler)
   websocket.on('close', websocketCloseHandler)
   websocket.on('error', websocketErrorHandler)

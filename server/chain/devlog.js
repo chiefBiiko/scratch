@@ -2,6 +2,7 @@
 
 module.exports = (e, next) => {
   console.log(`[ ${new Date().toUTCString()}\n` +
+              `e.gma_id: ${e.gma_id}\n` +
               `e.user.id: ${e.user.id}\n` +
               `e.text: ${e.text}\n` +
               `e.on: ${e.on}\n` +

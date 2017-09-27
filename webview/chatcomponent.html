@@ -5,7 +5,7 @@
     <title>chatbot client</title>
     <script>
       'use strict'
-      // TODO parse document.cookies and send e.sid with every message!!! TODO
+      // TODO parse document.cookies and send e.gma_id with every message!!! TODO
       function initChatbotComponent(serveraddress='ws://127.0.0.1:50000') {
         const websocket = new WebSocket(serveraddress)
         // DOM elements
@@ -124,7 +124,7 @@
           }
           btn.onclick = function(e) {
             websocket.send(JSON.stringify({
-              sid: parseCookies(document.cookies)['GMA_ID'] || '419',
+              gma_id: parseCookies(document.cookies)['GMA_ID'] || '419',
               text: '',
               on: this.value // aka btn.value
             }))
@@ -196,7 +196,7 @@
               !/^\s*$/.test(stdusr.value)) {
             msgboard.appendChild(makeMessageBox('right', stdusr.value))
             websocket.send(JSON.stringify({
-              sid: parseCookies(document.cookies)['GMA_ID'] || '419',
+              gma_id: parseCookies(document.cookies)['GMA_ID'] || '419',
               text: stdusr.value
             }))
             stdusr.value = ''

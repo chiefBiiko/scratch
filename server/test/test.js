@@ -149,6 +149,9 @@ describe('helpers', () => {
     it('should return an array', () => {
       x.should.be.an('array')
     })
+    it('should return an array of strings', () => {
+      x.forEach(item => item.should.be.a('string'))
+    })
   })
 
   describe('makeActiveMap', () => {
@@ -270,6 +273,10 @@ describe('chain', () => {
   describe('rageScorer', () => {
     it('should return a function', () => {
       rageScorer.should.be.a('function')
+    })
+    it('should set e.response if sentiment is negative', () => {
+      rageScorer({ text: 'you are dumb', response: {} }, () => {})
+        .response.text.startsWith('You sound angry').should.be.true
     })
   })
 
