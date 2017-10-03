@@ -6,9 +6,10 @@
 + make the botface smile
 + react to a few ASCII faces
 + know a little everyday chit chat
++ additional, hands-on info block after #welcome fmt block
 + make chatbot component height adjustable for user
 + add konica minolta logo to headline
-+ emoji support?
++ emoji support? no..!
 
 ## big
 
