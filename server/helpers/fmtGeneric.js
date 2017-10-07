@@ -17,7 +17,13 @@ module.exports = Object.freeze({
   },
   welcomeAgain: name => {
     return {
-      text: `Hey we have already met ${name || ''}`
+      text: `Hey we have already met ${name || ''}\n` +
+            `Which of the below subjects covers your matter?`,
+      buttons: [
+        { text: 'Inventory', value: 'inventory'},
+        { text: 'Volumes', value: 'volumes' },
+        { text: 'Invoices', value: 'invoices' }
+      ]
     }
   },
   nice2Meet: name => {

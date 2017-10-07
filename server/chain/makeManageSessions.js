@@ -7,7 +7,9 @@ module.exports = SESSIONS => {
   const manageSessions = (e, next) => { // closes over SESSIONS
     const name = checkForUserName(e.text)
     if (!SESSIONS.has(e.user.id)) { // new session
-      e.response = fmtGeneric.welcome(name)
+      if (/^(hi|hallo|hello|hey)/i.test(e.text)) { // only welcome on greeting
+        e.response = fmtGeneric.welcome(name)
+      }
       SESSIONS.set(e.user.id, { // ...and store it
         name: name,
         last_query: e.text,
