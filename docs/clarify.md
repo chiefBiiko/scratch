@@ -7,4 +7,3 @@ mere name of a business relationship manager?
     + URL query string?
     + session cookie?
     + some other way?
-+ database schema?

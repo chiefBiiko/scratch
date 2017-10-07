@@ -5,9 +5,10 @@
     <title>chatbot client</title>
     <script>
       'use strict'
-      // TODO parse document.cookies and send e.gma_id with every message!!! TODO
+      // TODO: onload read msg history from sessionStorage!!!
       function initChatbotComponent(serveraddress='ws://127.0.0.1:50000') {
         const websocket = new WebSocket(serveraddress)
+        const SESSIONSTORAGE_KEY = 'bizview_bot_msg_history'
         // DOM elements
         const body = document.querySelector('body')
         const component = document.createElement('div')
@@ -16,10 +17,10 @@
         const msgboard = document.createElement('div')
         const stdusr = document.createElement('input')
         const stdbtn = document.createElement('span')
-        const hidevis = '<svg width="20" height="16">' +
+        const HIDEVIS = '<svg width="20" height="16">' +
           '<rect x="2" y="6" width="16" height="4" fill="#000"></rect>' +
           '</svg>'
-        const showvis = '<svg width="20" height="16">' +
+        const SHOWVIS = '<svg width="20" height="16">' +
           '<rect x="4" y="4" width="4" height="4" fill="#000"></rect>' +
           '<rect x="12" y="4" width="4" height="4" fill="#000"></rect>' +
           '<rect x="4" y="12" width="12" height="4" fill="#000"></rect>' +
@@ -27,7 +28,7 @@
         // assembling DOM elements
         headline.innerHTML = '<strong>bizview bot</strong>'
         toggler.isComponentOpen = true
-        toggler.innerHTML = hidevis
+        toggler.innerHTML = HIDEVIS
         stdusr.type = 'text'
         stdusr.placeholder = 'chat...'
         stdbtn.innerText = 'Send'
@@ -70,6 +71,10 @@
         stdusr.style.height = stdbtn.style.height = stdbtn.style.lineHeight =
           '25px'
         stdbtn.style.width = '80px'
+        // mini helper
+        function isString(x) {
+          return typeof(x) === 'string' || x instanceof String
+        }
         // ordinary helper
         function parseCookies(cookies) { // cookies == window.document.cookies
           const list = {}
@@ -80,6 +85,38 @@
             })
           }
           return list
+        }
+        // storage push helper
+        // sessionStorage.key must be a JSON array
+        // if .key is not yet set this func will push to an empty JSON array
+        function pushToSessionStorage(key, value) { // key: string, value: any
+          var storedArray
+          try {
+            storedArray = JSON.parse(window.sessionStorage.getItem(key) || null)
+          } catch(err) {
+            return console.error(err)
+          }
+          if (!storedArray || !Array.isArray(storedArray)) storedArray = []
+          storedArray.push(value) // mutate and set the storage array
+          window.sessionStorage.setItem(key, JSON.stringify(storedArray))
+        }
+        // storage replication helper
+        function replicateFromSessionStorage(key) { // key: string
+          var storedArray
+          try {
+            storedArray = JSON.parse(window.sessionStorage.getItem(key) || null)
+          } catch(err) {
+            return console.error(err)
+          }
+          if (!storedArray || !Array.isArray(storedArray)) return
+          // rerender stored messages
+          storedArray.forEach(sack => {
+            if (sack.from === 'usr') {
+              usrInputHandler(sack)
+            } else if (sack.from === 'bot') {
+              botReplyHandler(sack)
+            }
+          })
         }
         // helper factories
         function makeMessageBox(align, text) { // align === CSS text-align
@@ -130,10 +167,7 @@
             }))
             // below can be used to allow only one click among a set of buttons
             // Array.from(document.getElementsByClassName(sharedclass))
-            //   .forEach(btn => {
-            //     btn.disabled = true
-            //     btn.style.cursor = 'not-allowed'
-            //   })
+            //   .forEach(btn => btn.disabled = true)
           }
           return btn
         }
@@ -182,51 +216,71 @@
               child.style.display = 'none'
             })
             this.isComponentOpen = false
-            this.innerHTML = showvis
+            this.innerHTML = SHOWVIS
           } else if (!this.isComponentOpen) {
             Array.from(component.children).slice(1).forEach(child => {
               child.style.display = 'block'
             })
             this.isComponentOpen = true
-            this.innerHTML = hidevis
+            this.innerHTML = HIDEVIS
           }
         }
         function usrInputHandler(e) {
-          if ((e.keyCode === 13 || e.type === 'click') &&
-              !/^\s*$/.test(stdusr.value)) {
-            msgboard.appendChild(makeMessageBox('right', stdusr.value))
-            websocket.send(JSON.stringify({
+          if (e.from === 'usr' && e.hasOwnProperty('text')) { // from storage
+            msgboard.appendChild(makeMessageBox('right', e.text))
+          } else if ((e.keyCode === 13 || e.type === 'click') &&
+                     !/^\s*$/.test(stdusr.value)) {
+            const sack = { // from usr input
               gma_id: parseCookies(document.cookies)['GMA_ID'] || '419',
               text: stdusr.value
-            }))
+            }
+            sack.from = 'usr' // brandmark for correct reread
+            pushToSessionStorage(SESSIONSTORAGE_KEY, sack) // persist
+            websocket.send(JSON.stringify(sack))
+            msgboard.appendChild(makeMessageBox('right', stdusr.value))
             stdusr.value = ''
-            msgboard.scrollTop = msgboard.scrollHeight
           }
+          msgboard.scrollTop = msgboard.scrollHeight
         }
-        function botReplyHandler(e) {
-          const pack = JSON.parse(e.data)
-          msgboard.appendChild(makeMessageBox('left', pack.response.text))
-          if (pack.response.hasOwnProperty('links')) {
-            pack.response.links.forEach(link => {
+        function botReplyHandler(e) { // handles messages and replication
+          var sack
+          // e.hasOwnProperty('data') gives a false negative for some reason
+          if (!!e.data && isString(e.data)) { // hacky alternative
+            try {
+              sack = JSON.parse(e.data) // from websocket
+            } catch(err) {
+              return console.error(err)
+            }
+            sack.from = 'bot' // brandmark for correct reread
+            pushToSessionStorage(SESSIONSTORAGE_KEY, sack) // persist
+          } else if (e instanceof Object &&
+                     e.hasOwnProperty('response') &&
+                     e.response.hasOwnProperty('text') &&
+                     isString(e.response.text)) {
+            sack = e // from sessionStorage
+          }
+          msgboard.appendChild(makeMessageBox('left', sack.response.text))
+          if (sack.response.hasOwnProperty('links')) {
+            sack.response.links.forEach(link => {
               msgboard.appendChild(makeLink(link.href, link.text))
             })
           }
-          if (pack.response.hasOwnProperty('buttons')) {
+          if (sack.response.hasOwnProperty('buttons')) {
             const timestamp = new Date().getTime()
-            pack.response.buttons.forEach(btn => {
-              msgboard.appendChild(makeButton(btn.value,
-                                              btn.text,
-                                              timestamp)) // as sharedclass
+            sack.response.buttons.forEach(btn => { // ts === sharedclass
+              msgboard.appendChild(makeButton(btn.value, btn.text, timestamp))
             })
           }
-          if (pack.response.hasOwnProperty('quickCopies')) {
-            pack.response.quickCopies.forEach(quickCopyText => {
+          if (sack.response.hasOwnProperty('quickCopies')) {
+            sack.response.quickCopies.forEach(quickCopyText => {
               msgboard.appendChild(makeCopyToClipboardButton(quickCopyText))
             })
           }
           msgboard.scrollTop = msgboard.scrollHeight
         }
         // registering event handlers
+        stdusr.onkeyup = stdbtn.onclick = usrInputHandler
+        websocket.onmessage = botReplyHandler
         toggler.onclick = toggleComponent
         component.onclick = () => stdusr.focus()
         stdbtn.onmousedown = stdbtn.onmouseenter =
@@ -235,9 +289,8 @@
             [ 'mousedown', 'mouseenter' ].includes(e.type) ?
               '#0071b3' : '#007dc5'
         }
-        stdusr.onkeyup = stdbtn.onclick = usrInputHandler
-        websocket.onmessage = botReplyHandler
-        // showtime
+        // showtime...
+        replicateFromSessionStorage(SESSIONSTORAGE_KEY)
         body.appendChild(component)
         stdusr.focus()
         return component
