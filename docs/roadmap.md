@@ -8,8 +8,9 @@
 + extend fmtGeneric by common lingo
 + proactively prompt #welcome some 30s after page load if sessionStorage is empty
 + additional, info on bot scope after #welcome fmt block
-+ make chatbot component height adjustable for user
 + add konica minolta logo to headline
++ wording + punctuation
++ make chatbot component height adjustable for user
 + emoji support? no..!
 
 ## big
