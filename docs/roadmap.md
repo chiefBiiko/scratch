@@ -3,6 +3,7 @@
 ## small
 
 + add casual country names to country code json file
++ rename matchExAx and randomArrPick!
 + make the botface smile
 + react to a few ASCII faces
 + extend fmtGeneric by common lingo
